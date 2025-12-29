@@ -126,5 +126,20 @@ export const apiClient = {
       console.error('Error registering partner:', error);
       throw error;
     }
+  },
+
+  // Partner password change
+  changePartnerPassword: async (currentPassword, newPassword, token) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/partners/change-password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...withAuth(token) },
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+      return await response.json();
+    } catch (error) {
+      console.error('Error changing password:', error);
+      throw error;
+    }
   }
 };

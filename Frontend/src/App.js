@@ -6,9 +6,11 @@ import { HomePage } from "./pages/HomePage";
 import { RestaurantPage } from "./pages/RestaurantPage";
 import { CheckoutPage } from "./pages/CheckoutPage";
 import { PartnerDashboard } from "./pages/PartnerDashboard";
+import { PartnerSettingsPage } from "./pages/PartnerSettingsPage";
 import { RestaurantPartnerPage } from "./pages/RestaurantPartnerPage";
 import { CustomerSignupPage } from "./pages/CustomerSignupPage";
 import { CustomerProfilePage } from "./pages/CustomerProfilePage";
+import { ShopManagementPage } from "./pages/ShopManagementPage";
 
 // Mock Data - Replace with API calls
 const mockRestaurants = [
@@ -18,6 +20,9 @@ const mockRestaurants = [
     cuisine: "Fast Food",
     rating: 4.5,
     deliveryFee: 29,
+    deliveryTime: "25",
+    address: "Gulshan 2, Dhaka",
+    serviceTypes: ["delivery", "pickup"],
     image:
       "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop",
     items: [
@@ -52,6 +57,10 @@ const mockRestaurants = [
     name: "Astana",
     cuisine: "bangali food",
     rating: 4.3,
+    deliveryFee: 35,
+    deliveryTime: "30",
+    address: "Banani, Dhaka",
+    serviceTypes: ["delivery"],
     image:
       "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop",
     items: [
@@ -79,6 +88,9 @@ const mockRestaurants = [
     cuisine: "Chinese and Bangla",
     rating: 4.7,
     deliveryFee: 40,
+    deliveryTime: "35",
+    address: "Dhanmondi, Dhaka",
+    serviceTypes: ["delivery", "pickup"],
     image:
       "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400&h=300&fit=crop",
     items: [
@@ -106,6 +118,9 @@ const mockRestaurants = [
     cuisine: "Chinese and Bangla",
     rating: 4.4,
     deliveryFee: 30,
+    deliveryTime: "20",
+    address: "Chattogram, Bangladesh",
+    serviceTypes: ["pickup"],
     image:
       "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&h=300&fit=crop",
     items: [
@@ -124,6 +139,126 @@ const mockRestaurants = [
         description: "Crispy vegetable rolls",
         image:
           "https://images.unsplash.com/photo-1620704669558-7e3aa60bc6dc?w=200&h=150&fit=crop",
+      },
+    ],
+  },
+  {
+    id: 5,
+    name: "Panshi's Kitchen",
+    cuisine: "Desserts & Bakery",
+    rating: 4.8,
+    deliveryFee: 25,
+    deliveryTime: "15",
+    address: "Mirpur, Dhaka",
+    serviceTypes: ["delivery", "pickup"],
+    image:
+      "https://images.unsplash.com/photo-1551024506-0bccd828d307?w=400&h=300&fit=crop",
+    items: [
+      {
+        id: 501,
+        name: "Chocolate Cake",
+        price: 350,
+        description: "Rich chocolate layer cake",
+        image:
+          "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=200&h=150&fit=crop",
+      },
+      {
+        id: 502,
+        name: "Cheesecake",
+        price: 420,
+        description: "Creamy New York cheesecake",
+        image:
+          "https://images.unsplash.com/photo-1612874742237-415c069f0580?w=200&h=150&fit=crop",
+      },
+    ],
+  },
+  {
+    id: 6,
+    name: "The Coffee Corner",
+    cuisine: "Cafe & Coffee",
+    rating: 4.6,
+    deliveryFee: 20,
+    deliveryTime: "10",
+    address: "Uttara, Dhaka",
+    serviceTypes: ["delivery"],
+    image:
+      "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop",
+    items: [
+      {
+        id: 601,
+        name: "Cappuccino",
+        price: 150,
+        description: "Creamy cappuccino",
+        image:
+          "https://images.unsplash.com/photo-1517668808822-9ebb02ae2a0e?w=200&h=150&fit=crop",
+      },
+      {
+        id: 602,
+        name: "Espresso Shots",
+        price: 120,
+        description: "Strong espresso",
+        image:
+          "https://images.unsplash.com/photo-1510812431401-41d2cab2707d?w=200&h=150&fit=crop",
+      },
+    ],
+  },
+  {
+    id: 7,
+    name: "Dragon's Wok",
+    cuisine: "Chinese",
+    rating: 4.5,
+    deliveryFee: 35,
+    deliveryTime: "25",
+    address: "Bashundhara, Dhaka",
+    serviceTypes: ["delivery", "pickup"],
+    image:
+      "https://images.unsplash.com/photo-1609501676725-7186f017a4b8?w=400&h=300&fit=crop",
+    items: [
+      {
+        id: 701,
+        name: "Chow Mein",
+        price: 280,
+        description: "Stir-fried noodles",
+        image:
+          "https://images.unsplash.com/photo-1609501676725-7186f017a4b8?w=200&h=150&fit=crop",
+      },
+      {
+        id: 702,
+        name: "Kung Pao Chicken",
+        price: 350,
+        description: "Spicy chicken with peanuts",
+        image:
+          "https://images.unsplash.com/photo-1582884921225-c36ebc5c9d2d?w=200&h=150&fit=crop",
+      },
+    ],
+  },
+  {
+    id: 8,
+    name: "Spice Garden",
+    cuisine: "Indian",
+    rating: 4.7,
+    deliveryFee: 40,
+    deliveryTime: "30",
+    address: "Mohakhali, Dhaka",
+    serviceTypes: ["pickup"],
+    image:
+      "https://images.unsplash.com/photo-1585238341710-4ce9852212af?w=400&h=300&fit=crop",
+    items: [
+      {
+        id: 801,
+        name: "Butter Chicken",
+        price: 420,
+        description: "Creamy tomato curry",
+        image:
+          "https://images.unsplash.com/photo-1603894752352-e94ce4c1e36e?w=200&h=150&fit=crop",
+      },
+      {
+        id: 802,
+        name: "Naan Bread",
+        price: 80,
+        description: "Traditional Indian bread",
+        image:
+          "https://images.unsplash.com/photo-1585021066580-78b0ba3e1155?w=200&h=150&fit=crop",
       },
     ],
   },
@@ -346,6 +481,21 @@ const App = () => {
         <PartnerDashboard
           loggedInPartner={loggedInPartner}
           analyticsData={getAnalyticsData(loggedInPartner.id)}
+          setCurrentPage={setCurrentPage}
+        />
+      )}
+
+      {currentPage === "partner-settings" && loggedInPartner && (
+        <PartnerSettingsPage
+          setCurrentPage={setCurrentPage}
+          partnerData={loggedInPartner}
+        />
+      )}
+
+      {currentPage === "shop-management" && loggedInPartner && (
+        <ShopManagementPage
+          setCurrentPage={setCurrentPage}
+          partnerData={loggedInPartner}
         />
       )}
 

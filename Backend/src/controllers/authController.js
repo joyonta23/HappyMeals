@@ -76,15 +76,30 @@ const partnerLogin = async (req, res, next) => {
     }
 
     const { partnerId, password } = req.body;
+    console.log("Partner login attempt:", { partnerId });
+
     const partner = await Partner.findOne({ partnerId }).populate("restaurant");
     if (!partner) {
+      console.log("Partner not found in database:", partnerId);
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    console.log(
+      "Partner found:",
+      partner.partnerId,
+      "with email:",
+      partner.email
+    );
+    console.log("Stored password hash:", partner.passwordHash.substring(0, 20) + "...");
+    console.log("Attempting password:", password);
+    
     const ok = await comparePassword(password, partner.passwordHash);
     if (!ok) {
+      console.log("Password mismatch for partner:", partnerId);
       return res.status(401).json({ message: "Invalid credentials" });
     }
+
+    console.log("Password match successful for partner:", partnerId);
 
     const token = signToken({
       userId: partner.id,
@@ -102,6 +117,7 @@ const partnerLogin = async (req, res, next) => {
       },
     });
   } catch (err) {
+    console.error("Partner login error:", err);
     next(err);
   }
 };

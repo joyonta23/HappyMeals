@@ -8,6 +8,8 @@ const restaurantSchema = new mongoose.Schema(
     deliveryFee: { type: Number, default: 30 },
     image: { type: String },
     city: { type: String, default: "Chattogram" },
+    address: { type: String },
+    phone: { type: String },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

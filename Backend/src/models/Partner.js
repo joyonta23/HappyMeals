@@ -6,6 +6,9 @@ const partnerSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     passwordHash: { type: String, required: true },
     ownerName: { type: String, required: true },
+    phone: { type: String, required: true },
+    address: { type: String, required: true },
+    city: { type: String, required: true, default: "Chattogram" },
     restaurant: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant" },
   },
   { timestamps: true }

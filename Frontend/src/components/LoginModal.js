@@ -17,6 +17,8 @@ export const LoginModal = ({ onClose, onLogin, onNavigateToSignup }) => {
       try {
         const response = await apiClient.partnerLogin(partnerId, password);
         if (response.token && response.partner) {
+          localStorage.setItem("partnerToken", response.token);
+          localStorage.setItem("partner", JSON.stringify(response.partner));
           onLogin(response.partner, "partner");
         } else {
           setError(response.message || "Invalid Partner ID or Password");
@@ -59,6 +61,9 @@ export const LoginModal = ({ onClose, onLogin, onNavigateToSignup }) => {
           <button
             onClick={() => {
               setLoginType("customer");
+              setPartnerId("");
+              setEmail("");
+              setPassword("");
               setError("");
             }}
             className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
@@ -72,6 +77,9 @@ export const LoginModal = ({ onClose, onLogin, onNavigateToSignup }) => {
           <button
             onClick={() => {
               setLoginType("partner");
+              setPartnerId("");
+              setEmail("");
+              setPassword("");
               setError("");
             }}
             className={`flex-1 py-2 px-4 rounded-lg font-medium transition ${
@@ -84,7 +92,12 @@ export const LoginModal = ({ onClose, onLogin, onNavigateToSignup }) => {
           </button>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form
+          onSubmit={handleLogin}
+          className="space-y-4"
+          key={loginType}
+          autoComplete="off"
+        >
           {loginType === "partner" ? (
             <>
               <div>
@@ -93,9 +106,14 @@ export const LoginModal = ({ onClose, onLogin, onNavigateToSignup }) => {
                 </label>
                 <input
                   type="text"
+                  name="partner-id-unique"
+                  id="partner-id-field"
                   value={partnerId}
                   onChange={(e) => setPartnerId(e.target.value)}
                   placeholder="Enter your Partner ID"
+                  autoComplete="off"
+                  data-lpignore="true"
+                  data-form-type="other"
                   required
                   className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
@@ -109,9 +127,14 @@ export const LoginModal = ({ onClose, onLogin, onNavigateToSignup }) => {
                 </label>
                 <input
                   type="password"
+                  name="partner-password-unique"
+                  id="partner-password-field"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
+                  autoComplete="new-password"
+                  data-lpignore="true"
+                  data-form-type="other"
                   required
                   className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
@@ -128,9 +151,14 @@ export const LoginModal = ({ onClose, onLogin, onNavigateToSignup }) => {
                 </label>
                 <input
                   type="email"
+                  name="customer-email-unique"
+                  id="customer-email-field"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
+                  autoComplete="off"
+                  data-lpignore="true"
+                  data-form-type="other"
                   required
                   className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
@@ -141,9 +169,14 @@ export const LoginModal = ({ onClose, onLogin, onNavigateToSignup }) => {
                 </label>
                 <input
                   type="password"
+                  name="customer-password-unique"
+                  id="customer-password-field"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
+                  autoComplete="new-password"
+                  data-lpignore="true"
+                  data-form-type="other"
                   required
                   className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
@@ -167,7 +200,7 @@ export const LoginModal = ({ onClose, onLogin, onNavigateToSignup }) => {
 
         <p className="text-center text-sm text-gray-600 mt-4">
           Don't have an account?{" "}
-          <button 
+          <button
             onClick={() => {
               onClose();
               if (onNavigateToSignup) onNavigateToSignup();

@@ -9,6 +9,7 @@ import {
   Heart,
   CreditCard,
   LogOut,
+  Store,
 } from "lucide-react";
 import { apiClient } from "../services/api";
 
@@ -23,6 +24,13 @@ export const CustomerProfilePage = ({ onLogout, onNavigate }) => {
     line2: "",
     city: "",
     country: "",
+  });
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [showAddPayment, setShowAddPayment] = useState(false);
+  const [newPayment, setNewPayment] = useState({
+    type: "bkash",
+    accountNumber: "",
+    accountName: "",
   });
 
   useEffect(() => {
@@ -40,6 +48,11 @@ export const CustomerProfilePage = ({ onLogout, onNavigate }) => {
         city: primaryAddress.city || "",
         country: primaryAddress.country || "",
       });
+    }
+    // Load payment methods from localStorage
+    const storedPayments = localStorage.getItem("paymentMethods");
+    if (storedPayments) {
+      setPaymentMethods(JSON.parse(storedPayments));
     }
   }, []);
 
@@ -96,6 +109,80 @@ export const CustomerProfilePage = ({ onLogout, onNavigate }) => {
     localStorage.removeItem("user");
     onLogout();
     onNavigate("home");
+  };
+
+  const handleAddPayment = () => {
+    if (!newPayment.accountNumber || !newPayment.accountName) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    const payment = {
+      id: Date.now(),
+      ...newPayment,
+    };
+
+    const updatedPayments = [...paymentMethods, payment];
+    setPaymentMethods(updatedPayments);
+    localStorage.setItem("paymentMethods", JSON.stringify(updatedPayments));
+
+    setNewPayment({
+      type: "bkash",
+      accountNumber: "",
+      accountName: "",
+    });
+    setShowAddPayment(false);
+  };
+
+  const handleRemovePayment = (id) => {
+    const updatedPayments = paymentMethods.filter((p) => p.id !== id);
+    setPaymentMethods(updatedPayments);
+    localStorage.setItem("paymentMethods", JSON.stringify(updatedPayments));
+  };
+
+  const getPaymentLogo = (type) => {
+    const logos = {
+      bkash: "https://upload.wikimedia.org/wikipedia/en/4/45/Bkash_Logo.svg",
+      nagad: "https://upload.wikimedia.org/wikipedia/en/9/9d/Nagad_Logo.png",
+      rocket: "https://upload.wikimedia.org/wikipedia/en/5/50/Rocket_Logo.png",
+      "sonali-bank":
+        "https://upload.wikimedia.org/wikipedia/en/2/25/Sonali_Bank_Logo.svg",
+    };
+    return logos[type] || null;
+  };
+
+  const getPaymentBadge = (type) => {
+    const badges = {
+      bkash: { bg: "bg-red-100", text: "text-red-700", label: "🔴 bKash" },
+      nagad: { bg: "bg-blue-100", text: "text-blue-700", label: "🔵 Nagad" },
+      rocket: {
+        bg: "bg-purple-100",
+        text: "text-purple-700",
+        label: "🟣 Rocket",
+      },
+      "sonali-bank": {
+        bg: "bg-green-100",
+        text: "text-green-700",
+        label: "🟢 Sonali",
+      },
+    };
+    return (
+      badges[type] || {
+        bg: "bg-gray-100",
+        text: "text-gray-700",
+        label: "Payment",
+      }
+    );
+  };
+
+  const getPaymentName = (type) => {
+    const names = {
+      bkash: "bKash",
+      nagad: "Nagad",
+      rocket: "Rocket",
+      "sonali-bank": "Sonali Bank",
+    };
+    return names[type] || type;
   };
 
   if (!user) {
@@ -188,6 +275,19 @@ export const CustomerProfilePage = ({ onLogout, onNavigate }) => {
               <div className="flex items-center justify-center gap-2">
                 <CreditCard className="w-5 h-5" />
                 Payment
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab("shops")}
+              className={`flex-1 px-6 py-4 text-center font-medium transition ${
+                activeTab === "shops"
+                  ? "text-orange-500 border-b-2 border-orange-500"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <Store className="w-5 h-5" />
+                My Shops
               </div>
             </button>
           </div>
@@ -399,14 +499,182 @@ export const CustomerProfilePage = ({ onLogout, onNavigate }) => {
               <h2 className="text-xl font-semibold text-gray-800 mb-6">
                 Payment Methods
               </h2>
+
+              {paymentMethods.length === 0 && !showAddPayment ? (
+                <div className="text-center py-12">
+                  <CreditCard className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-2">No payment methods added</p>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Add a payment method for faster checkout
+                  </p>
+                  <button
+                    onClick={() => setShowAddPayment(true)}
+                    className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                  >
+                    Add Payment Method
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {paymentMethods.map((payment) => (
+                    <div
+                      key={payment.id}
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-orange-300 transition"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div
+                          className={`w-16 h-16 flex items-center justify-center rounded-lg font-bold text-lg ${
+                            getPaymentBadge(payment.type).bg
+                          } ${getPaymentBadge(payment.type).text}`}
+                        >
+                          {getPaymentLogo(payment.type) ? (
+                            <img
+                              src={getPaymentLogo(payment.type)}
+                              alt={getPaymentName(payment.type)}
+                              className="w-full h-full object-contain p-1"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            <span>{getPaymentBadge(payment.type).label}</span>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-800">
+                            {getPaymentName(payment.type)}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {payment.accountName}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            •••• {payment.accountNumber.slice(-4)}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleRemovePayment(payment.id)}
+                        className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+
+                  {!showAddPayment && (
+                    <button
+                      onClick={() => setShowAddPayment(true)}
+                      className="w-full py-3 border-2 border-dashed border-gray-300 text-gray-600 rounded-lg hover:border-orange-500 hover:text-orange-500 transition"
+                    >
+                      + Add Another Payment Method
+                    </button>
+                  )}
+
+                  {showAddPayment && (
+                    <div className="p-6 border-2 border-orange-300 rounded-lg bg-orange-50">
+                      <h3 className="font-semibold text-gray-800 mb-4">
+                        Add New Payment Method
+                      </h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Payment Type
+                          </label>
+                          <select
+                            value={newPayment.type}
+                            onChange={(e) =>
+                              setNewPayment({
+                                ...newPayment,
+                                type: e.target.value,
+                              })
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          >
+                            <option value="bkash">bKash</option>
+                            <option value="nagad">Nagad</option>
+                            <option value="rocket">Rocket</option>
+                            <option value="sonali-bank">Sonali Bank</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Account Name
+                          </label>
+                          <input
+                            type="text"
+                            value={newPayment.accountName}
+                            onChange={(e) =>
+                              setNewPayment({
+                                ...newPayment,
+                                accountName: e.target.value,
+                              })
+                            }
+                            placeholder="Enter account holder name"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Account Number
+                          </label>
+                          <input
+                            type="text"
+                            value={newPayment.accountNumber}
+                            onChange={(e) =>
+                              setNewPayment({
+                                ...newPayment,
+                                accountNumber: e.target.value,
+                              })
+                            }
+                            placeholder="Enter account/mobile number"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setShowAddPayment(false);
+                              setNewPayment({
+                                type: "bkash",
+                                accountNumber: "",
+                                accountName: "",
+                              });
+                            }}
+                            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={handleAddPayment}
+                            className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                          >
+                            Add Payment
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "shops" && (
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800 mb-6">
+                My Shops
+              </h2>
               <div className="text-center py-12">
-                <CreditCard className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">No payment methods added</p>
-                <p className="text-sm text-gray-500">
-                  Add a payment method for faster checkout
+                <Store className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-600 mb-2">No shops yet</p>
+                <p className="text-sm text-gray-500 mb-4">
+                  Start managing your restaurant or shop from here
                 </p>
-                <button className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
-                  Add Payment Method
+                <button
+                  onClick={() => (window.location.href = "/")}
+                  className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
+                >
+                  Browse Shops
                 </button>
               </div>
             </div>
