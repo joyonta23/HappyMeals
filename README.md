@@ -5,6 +5,7 @@ A full-stack MERN (MongoDB, Express, React, Node.js) food ordering platform insp
 ## 🎯 Features
 
 ### Customer Features
+
 - ✅ **User Authentication** - Signup/Login with JWT tokens
 - ✅ **Customer Profile** - Manage personal info, addresses, payment methods
 - ✅ **Restaurant Browsing** - Search and filter restaurants by cuisine, rating, delivery fee
@@ -14,12 +15,14 @@ A full-stack MERN (MongoDB, Express, React, Node.js) food ordering platform insp
 - ✅ **Bilingual Support** - English & বাংলা (Bengali)
 
 ### Partner/Restaurant Features
+
 - 🏪 **Partner Login** - Secure login for restaurant owners
 - 📊 **Dashboard** - Analytics, daily sales, order tracking
 - 🎯 **Menu Management** - Add/edit menu items and pricing
 - 📈 **Business Insights** - Revenue, popular items, customer reviews
 
 ### General Features
+
 - 🌐 **Responsive Design** - Mobile-friendly UI with Tailwind CSS
 - 🔐 **Security** - Password hashing, JWT authentication, protected routes
 - 💾 **Database** - MongoDB Atlas integration with Mongoose ODM
@@ -28,12 +31,14 @@ A full-stack MERN (MongoDB, Express, React, Node.js) food ordering platform insp
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - **React 18.2** - UI library
 - **Tailwind CSS** - Utility-first CSS framework
 - **Lucide React** - Icon library
 - **JavaScript (ES6+)** - Programming language
 
 ### Backend
+
 - **Node.js** - Runtime environment
 - **Express 4.18** - Web framework
 - **MongoDB 7.6** - NoSQL database (Atlas)
@@ -44,6 +49,7 @@ A full-stack MERN (MongoDB, Express, React, Node.js) food ordering platform insp
 - **CORS** - Cross-origin resource sharing
 
 ### Tools & Services
+
 - **MongoDB Atlas** - Cloud database (free M0 tier)
 - **Git & GitHub** - Version control
 - **Nodemon** - Development auto-reload
@@ -122,6 +128,7 @@ HappyMeals/
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 18+ and npm
 - MongoDB Atlas account (free tier available)
 - Git
@@ -129,6 +136,7 @@ HappyMeals/
 ### Installation
 
 #### 1. Clone the repository
+
 ```bash
 git clone https://github.com/joyonta23/HappyMeals.git
 cd HappyMeals
@@ -177,44 +185,53 @@ Frontend runs on `http://localhost:3000`
 ## 🔑 Demo Credentials
 
 ### Customer Login
+
 - **Email:** joyontobiswas2020@gmail.com
 - **Password:** (Set during signup)
 
 ### Restaurant Partner Login
+
 - **Partner ID:** PARTNER001 or PARTNER002
 - **Password:** demo123
 
 ## 📡 API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/customer-signup` - Register new customer
 - `POST /api/auth/customer-login` - Login customer
 - `PUT /api/auth/customer-profile` - Update customer profile
 - `POST /api/auth/partner-login` - Login restaurant partner
 
 ### Restaurants
+
 - `GET /api/restaurants` - Get all restaurants
 - `GET /api/restaurants/:id` - Get restaurant details
 
 ### Orders
+
 - `POST /api/orders` - Create new order (requires auth)
 - `GET /api/orders/:id` - Get order details
 
 ### Analytics
+
 - `GET /api/analytics/:partnerId` - Get partner analytics (requires auth)
 
 ### Partners
+
 - `POST /api/partners/register` - Register new restaurant partner
 
 ## 🌍 Internationalization
 
 The app supports two languages:
+
 - **English (EN)** - Default language
 - **বাংলা (Bengali)** - Translated UI
 
 Switch languages using the language selector in the navbar.
 
 Translation strings are centralized in:
+
 ```
 Frontend/src/utils/translations.js
 ```
@@ -232,6 +249,7 @@ Frontend/src/utils/translations.js
 ## 📊 Database Schema
 
 ### Users Collection
+
 ```javascript
 {
   name: String,
@@ -251,6 +269,7 @@ Frontend/src/utils/translations.js
 ```
 
 ### Orders Collection
+
 ```javascript
 {
   customerId: ObjectId,
@@ -271,6 +290,7 @@ Frontend/src/utils/translations.js
 ## 🔄 Development Workflow
 
 ### Making Changes
+
 1. Create a new branch for features: `git checkout -b feature/your-feature`
 2. Make your changes
 3. Test thoroughly
@@ -279,6 +299,7 @@ Frontend/src/utils/translations.js
 6. Open a Pull Request
 
 ### Running Tests
+
 ```bash
 # Frontend
 cd Frontend
@@ -292,6 +313,7 @@ npm test
 ## 📝 Environment Variables
 
 ### Backend (.env)
+
 ```
 MONGODB_URI=mongodb+srv://user:password@cluster.mongodb.net/happymeal
 JWT_SECRET=your_super_secret_key_change_this
@@ -300,6 +322,7 @@ PORT=5000
 ```
 
 ### Frontend (.env.local)
+
 ```
 REACT_APP_API_URL=http://localhost:5000/api
 ```
@@ -307,16 +330,19 @@ REACT_APP_API_URL=http://localhost:5000/api
 ## 🐛 Troubleshooting
 
 ### Backend won't start
+
 - Check MongoDB Atlas connection string
 - Verify port 5000 is available
 - Ensure .env file exists with correct variables
 
 ### Frontend won't connect to backend
+
 - Verify backend is running on port 5000
 - Check CORS_ORIGIN in backend .env
 - Clear browser cache and restart dev server
 
 ### Database connection errors
+
 - Verify MongoDB Atlas IP whitelist includes your IP
 - Check username/password in connection string
 - Ensure database user has proper permissions
@@ -324,6 +350,7 @@ REACT_APP_API_URL=http://localhost:5000/api
 ## 🚀 Deployment
 
 ### Frontend (Vercel/Netlify)
+
 ```bash
 # Build for production
 cd Frontend
@@ -333,6 +360,7 @@ npm run build
 ```
 
 ### Backend (Heroku/Railway/Render)
+
 ```bash
 # Set environment variables in hosting platform
 # Push to Git and deploy
@@ -349,6 +377,7 @@ npm run build
 ## 🤝 Contributing
 
 Contributions are welcome! Please:
+
 1. Fork the repository
 2. Create a feature branch
 3. Commit your changes
@@ -362,6 +391,7 @@ This project is open source and available under the MIT License.
 ## 👨‍💻 Author
 
 **Joyonta Biswas**
+
 - GitHub: [@joyonta23](https://github.com/joyonta23)
 - Email: joyontobiswas2020@gmail.com
 
