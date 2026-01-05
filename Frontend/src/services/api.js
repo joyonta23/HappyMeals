@@ -153,11 +153,23 @@ export const apiClient = {
   // Partner registration
   registerPartner: async (formData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/partners/register`, {
+      // Check if formData is FormData (has entries method) or plain object
+      const isFormData = formData instanceof FormData;
+      const config = {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      };
+
+      if (isFormData) {
+        // FormData includes file, don't set Content-Type header
+        // Let the browser set it with the boundary
+        config.body = formData;
+      } else {
+        // Plain object
+        config.headers = { "Content-Type": "application/json" };
+        config.body = JSON.stringify(formData);
+      }
+
+      const response = await fetch(`${API_BASE_URL}/partners/register`, config);
       return await response.json();
     } catch (error) {
       console.error("Error registering partner:", error);
@@ -176,6 +188,36 @@ export const apiClient = {
       return await response.json();
     } catch (error) {
       console.error("Error changing password:", error);
+      throw error;
+    }
+  },
+
+  // Partner add menu item (supports file upload)
+  addMenuItem: async (formData, token) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/partners/items`, {
+        method: "POST",
+        headers: { ...withAuth(token) },
+        body: formData,
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Error adding menu item:", error);
+      throw error;
+    }
+  },
+
+  // Update order status (partner/admin)
+  updateOrderStatus: async (orderId, status, token) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders/${orderId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...withAuth(token) },
+        body: JSON.stringify({ status }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Error updating order status:", error);
       throw error;
     }
   },

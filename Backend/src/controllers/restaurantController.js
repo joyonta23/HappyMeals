@@ -1,4 +1,5 @@
 const { validationResult } = require("express-validator");
+const mongoose = require("mongoose");
 const Restaurant = require("../models/Restaurant");
 const MenuItem = require("../models/MenuItem");
 const Review = require("../models/Review");
@@ -74,6 +75,41 @@ const getRestaurantById = async (req, res, next) => {
       available: true,
     }).lean();
 
+    // Aggregate per-item ratings for this restaurant
+    const itemRatings = await Review.aggregate([
+      {
+        $match: {
+          restaurant: new mongoose.Types.ObjectId(id),
+          menuItem: { $exists: true, $ne: null },
+        },
+      },
+      {
+        $group: {
+          _id: "$menuItem",
+          avgRating: { $avg: "$rating" },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const ratingsMap = itemRatings.reduce((acc, r) => {
+      acc[r._id.toString()] = {
+        avgRating: Math.round((r.avgRating || 0) * 10) / 10,
+        reviewCount: r.count,
+      };
+      return acc;
+    }, {});
+
+    const itemsWithRatings = items.map((it) => {
+      const key = (it._id || it.id).toString();
+      const ratingInfo = ratingsMap[key] || {};
+      return {
+        ...it,
+        avgRating: ratingInfo.avgRating || 0,
+        reviewCount: ratingInfo.reviewCount || 0,
+      };
+    });
+
     // Fetch latest reviews and compute average rating
     const reviews = await Review.find({ restaurant: id })
       .sort({ createdAt: -1 })
@@ -86,7 +122,12 @@ const getRestaurantById = async (req, res, next) => {
       averageRating = Math.round((sum / reviews.length) * 10) / 10; // 1 decimal place
     }
 
-    res.json({ ...restaurant, items, reviews, averageRating });
+    res.json({
+      ...restaurant,
+      items: itemsWithRatings,
+      reviews,
+      averageRating,
+    });
   } catch (err) {
     next(err);
   }
@@ -122,7 +163,7 @@ const addReview = async (req, res, next) => {
     const user = await require("../models/User").findById(userId).lean();
     const userName = user?.name || "Customer";
 
-    const review = await Review.create({
+    let review = await Review.create({
       restaurant: id,
       menuItem: menuItem ? menuItem.id : undefined,
       user: userId,
@@ -130,6 +171,9 @@ const addReview = async (req, res, next) => {
       rating,
       comment,
     });
+
+    // Populate menu item name for the response
+    review = await review.populate("menuItem", "name");
 
     // Recalculate average rating and persist on restaurant
     const agg = await Review.aggregate([
@@ -169,6 +213,7 @@ const getReviews = async (req, res, next) => {
 
     const reviews = await Review.find({ restaurant: id })
       .sort({ createdAt: -1 })
+      .populate("menuItem", "name")
       .limit(limit)
       .lean();
 

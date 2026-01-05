@@ -465,15 +465,15 @@ export const CustomerProfilePage = ({ onLogout, onNavigate }) => {
               </h2>
               <div className="text-center py-12">
                 <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">No orders yet</p>
-                <p className="text-sm text-gray-500">
-                  Start ordering delicious food from your favorite restaurants!
+                <p className="text-gray-600 mb-2">No active orders</p>
+                <p className="text-sm text-gray-500 mb-6">
+                  View and track all your orders in one place!
                 </p>
                 <button
-                  onClick={() => onNavigate("home")}
+                  onClick={() => onNavigate("order-tracking")}
                   className="mt-4 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"
                 >
-                  Browse Restaurants
+                  View Order Tracking
                 </button>
               </div>
             </div>

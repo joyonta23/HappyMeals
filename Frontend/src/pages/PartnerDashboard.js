@@ -34,6 +34,8 @@ export const PartnerDashboard = ({
   const [incomingOrders, setIncomingOrders] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [unreadOrderCount, setUnreadOrderCount] = useState(0);
+  const notificationKey = "partner-notifications";
 
   const restaurantId =
     loggedInPartner?.restaurant?._id || loggedInPartner?.restaurant?.id;
@@ -42,7 +44,118 @@ export const PartnerDashboard = ({
   useEffect(() => {
     const orders = JSON.parse(localStorage.getItem("partner-orders") || "[]");
     setIncomingOrders(orders);
+    const unread = orders.filter((o) => !o.notificationRead).length;
+    setUnreadOrderCount(unread);
   }, [activeTab]);
+
+  const pushNotification = (message, orderId, type = "info") => {
+    const list = JSON.parse(localStorage.getItem(notificationKey) || "[]");
+    const entry = {
+      id: `notif-${Date.now()}`,
+      orderId,
+      message,
+      type,
+      read: false,
+      createdAt: new Date().toISOString(),
+    };
+    const updated = [entry, ...list].slice(0, 50);
+    localStorage.setItem(notificationKey, JSON.stringify(updated));
+  };
+
+  const updateCustomerOrderStatus = (orderId, status) => {
+    const userOrders = JSON.parse(localStorage.getItem("orders") || "[]");
+    const updated = userOrders.map((o) =>
+      o.id === orderId ? { ...o, status } : o
+    );
+    localStorage.setItem("orders", JSON.stringify(updated));
+
+    const userNotifs = JSON.parse(
+      localStorage.getItem("user-notifications") || "[]"
+    );
+    const entry = {
+      id: `unotif-${Date.now()}`,
+      orderId,
+      message:
+        status === "accepted"
+          ? `Your order ${orderId} was accepted!`
+          : `Your order ${orderId} was rejected.`,
+      type: status === "accepted" ? "success" : "error",
+      read: false,
+      createdAt: new Date().toISOString(),
+    };
+    const updatedNotifs = [entry, ...userNotifs].slice(0, 50);
+    localStorage.setItem("user-notifications", JSON.stringify(updatedNotifs));
+  };
+
+  const handleAcceptOrder = async (orderId) => {
+    const token = localStorage.getItem("partnerToken");
+    if (!token) {
+      alert("Please log in again.");
+      return;
+    }
+
+    try {
+      const response = await apiClient.updateOrderStatus(
+        orderId,
+        "accepted",
+        token
+      );
+      if (response?.order) {
+        const orders = JSON.parse(
+          localStorage.getItem("partner-orders") || "[]"
+        );
+        const updated = orders.map((o) =>
+          o.id === orderId
+            ? { ...o, status: "accepted", notificationRead: true }
+            : o
+        );
+        localStorage.setItem("partner-orders", JSON.stringify(updated));
+        setIncomingOrders(updated);
+        setUnreadOrderCount(updated.filter((o) => !o.notificationRead).length);
+
+        updateCustomerOrderStatus(orderId, "accepted");
+        pushNotification(`Order ${orderId} accepted`, orderId, "success");
+      }
+    } catch (err) {
+      console.error("Failed to accept order", err);
+      alert("Could not accept order. Please try again.");
+    }
+  };
+
+  const handleRejectOrder = async (orderId) => {
+    const token = localStorage.getItem("partnerToken");
+    if (!token) {
+      alert("Please log in again.");
+      return;
+    }
+
+    try {
+      const response = await apiClient.updateOrderStatus(
+        orderId,
+        "rejected",
+        token
+      );
+      if (response?.order) {
+        const orders = JSON.parse(
+          localStorage.getItem("partner-orders") || "[]"
+        );
+        const updated = orders.map((o) =>
+          o.id === orderId
+            ? { ...o, status: "rejected", notificationRead: true }
+            : o
+        );
+        localStorage.setItem("partner-orders", JSON.stringify(updated));
+        setIncomingOrders(updated);
+        setUnreadOrderCount(updated.filter((o) => !o.notificationRead).length);
+
+        updateCustomerOrderStatus(orderId, "rejected");
+        pushNotification(`Order ${orderId} rejected`, orderId, "error");
+      }
+    } catch (err) {
+      console.error("Failed to reject order", err);
+      alert("Could not reject order. Please try again.");
+    }
+  };
 
   useEffect(() => {
     const loadReviews = async () => {
@@ -862,13 +975,21 @@ export const PartnerDashboard = ({
 
                       {/* Action Buttons */}
                       <div className="flex gap-3">
-                        <button className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => handleAcceptOrder(order.id)}
+                          className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                        >
                           <CheckCircle size={18} />
-                          Accept Order
+                          {order.status === "accepted"
+                            ? "Accepted"
+                            : "Accept Order"}
                         </button>
-                        <button className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => handleRejectOrder(order.id)}
+                          className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold transition flex items-center justify-center gap-2"
+                        >
                           <X size={18} />
-                          Reject
+                          {order.status === "rejected" ? "Rejected" : "Reject"}
                         </button>
                       </div>
                     </div>

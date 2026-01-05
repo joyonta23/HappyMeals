@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   MapPin,
@@ -10,6 +10,7 @@ import {
   Rocket,
   TrendingUp,
   Award,
+  Bell,
 } from "lucide-react";
 import { useTranslation } from "../utils/translations";
 
@@ -31,6 +32,31 @@ export const Navbar = ({
     if (typeof onShowLogin === "function") {
       onShowLogin();
     }
+  };
+
+  const notificationKey = loggedInPartner
+    ? "partner-notifications"
+    : localStorage.getItem("user")
+    ? "user-notifications"
+    : null;
+
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!notificationKey) return;
+    const list = JSON.parse(localStorage.getItem(notificationKey) || "[]");
+    setNotifications(list);
+    setUnreadCount(list.filter((n) => !n.read).length);
+  }, [notificationKey, showNotifications]);
+
+  const markNotificationsRead = () => {
+    if (!notificationKey) return;
+    const list = notifications.map((n) => ({ ...n, read: true }));
+    localStorage.setItem(notificationKey, JSON.stringify(list));
+    setNotifications(list);
+    setUnreadCount(0);
   };
 
   const handleLanguageChange = (lang) => {
@@ -58,14 +84,14 @@ export const Navbar = ({
               <div className="flex items-center gap-2 hover:scale-105 transition-transform cursor-pointer">
                 <Package size={20} className="animate-bounce-subtle" />
                 <span className="text-sm font-semibold">
-                  {t('deliverWithHappyMeal')}
+                  {t("deliverWithHappyMeal")}
                 </span>
               </div>
 
               <div className="hidden md:flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full">
                 <TrendingUp size={16} />
                 <span className="text-xs font-medium">
-                  {t('fastReliableService')}
+                  {t("fastReliableService")}
                 </span>
               </div>
             </div>
@@ -77,7 +103,7 @@ export const Navbar = ({
                 className="group flex items-center gap-3 bg-white text-orange-600 px-6 py-2.5 rounded-full hover:bg-orange-50 transition-all shadow-lg hover:shadow-xl hover:scale-105 font-bold"
               >
                 <Rocket size={18} className="group-hover:animate-bounce" />
-                <span>{t('becomePartner')}</span>
+                <span>{t("becomePartner")}</span>
                 <Award
                   size={18}
                   className="group-hover:rotate-12 transition-transform"
@@ -91,7 +117,9 @@ export const Navbar = ({
                 <span className="text-2xl">🎉</span>
                 <div className="text-left">
                   <div className="text-xs font-medium">10,000+</div>
-                  <div className="text-[10px] opacity-90">{t('happyCustomers')}</div>
+                  <div className="text-[10px] opacity-90">
+                    {t("happyCustomers")}
+                  </div>
                 </div>
               </div>
             </div>
@@ -102,7 +130,7 @@ export const Navbar = ({
               className="lg:hidden bg-white text-orange-600 px-4 py-2 rounded-full hover:bg-orange-50 transition-all shadow-md text-sm font-bold flex items-center gap-2"
             >
               <Rocket size={16} />
-              <span>{t('partner')}</span>
+              <span>{t("partner")}</span>
             </button>
           </div>
         </div>
@@ -164,6 +192,14 @@ export const Navbar = ({
                     </span>
                   </button>
                   <button
+                    onClick={() => setCurrentPage("order-tracking")}
+                    className="hidden md:flex items-center gap-2 px-4 py-2 text-orange-600 font-medium hover:bg-orange-50 rounded-lg transition"
+                    title="Track your orders"
+                  >
+                    <Package size={18} />
+                    <span className="text-sm">Track Orders</span>
+                  </button>
+                  <button
                     onClick={() => {
                       localStorage.removeItem("authToken");
                       localStorage.removeItem("user");
@@ -172,7 +208,7 @@ export const Navbar = ({
                     }}
                     className="text-sm text-gray-600 hover:text-gray-900"
                   >
-                    {t('logout')}
+                    {t("logout")}
                   </button>
                 </div>
               ) : (
@@ -181,14 +217,14 @@ export const Navbar = ({
                   className="hidden md:flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-lg transition"
                 >
                   <User size={18} />
-                  <span className="text-sm font-medium">{t('login')}</span>
+                  <span className="text-sm font-medium">{t("login")}</span>
                 </button>
               )}
               <button
                 onClick={() => setCurrentPage("customer-signup")}
                 className="bg-orange-600 text-white px-5 py-2 rounded-lg hover:bg-orange-700 transition font-medium text-sm shadow-md hover:shadow-lg hover:scale-105"
               >
-                {t('signUpFreeDelivery')}
+                {t("signUpFreeDelivery")}
               </button>
 
               {/* Language Selector */}
@@ -215,7 +251,7 @@ export const Navbar = ({
                           : ""
                       }`}
                     >
-                      {t('english')}
+                      {t("english")}
                     </button>
                     <button
                       onClick={() => handleLanguageChange("বাংলা")}
@@ -225,13 +261,69 @@ export const Navbar = ({
                           : ""
                       }`}
                     >
-                      {t('bangla')}
+                      {t("bangla")}
                     </button>
                   </div>
                 )}
               </div>
 
               {/* Cart Icon */}
+              <div className="relative">
+                <button
+                  className="relative p-2 hover:bg-gray-50 rounded-lg transition"
+                  onClick={() => {
+                    if (notifications.length) markNotificationsRead();
+                    setShowNotifications(!showNotifications);
+                  }}
+                  disabled={!notificationKey}
+                >
+                  <Bell size={22} className="text-gray-700" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+                {showNotifications && notificationKey && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white shadow-xl rounded-lg border z-50">
+                    <div className="flex items-center justify-between px-4 py-2 border-b bg-gray-50 rounded-t-lg">
+                      <span className="font-semibold text-gray-800">
+                        Notifications
+                      </span>
+                      <button
+                        onClick={() => setShowNotifications(false)}
+                        className="text-gray-500 hover:text-gray-800"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto divide-y">
+                      {notifications.length === 0 ? (
+                        <div className="p-4 text-sm text-gray-600">
+                          No notifications
+                        </div>
+                      ) : (
+                        notifications.slice(0, 10).map((n) => (
+                          <div key={n.id} className="p-3 text-sm text-gray-700">
+                            <div className="font-semibold text-gray-800">
+                              {n.message}
+                            </div>
+                            {n.orderId && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                Order: {n.orderId}
+                              </div>
+                            )}
+                            <div className="text-xs text-gray-400 mt-1">
+                              {new Date(n.createdAt).toLocaleString()}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <button
                 className="relative p-2 hover:bg-gray-50 rounded-lg transition"
                 onClick={() => cart.length > 0 && setCurrentPage("checkout")}

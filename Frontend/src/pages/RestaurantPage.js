@@ -6,6 +6,7 @@ export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
   const [reviews, setReviews] = useState([]);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [menuItemId, setMenuItemId] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState("");
   const [reviewSuccess, setReviewSuccess] = useState("");
@@ -47,7 +48,8 @@ export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
         restaurantId,
         Number(rating),
         comment,
-        token
+        token,
+        menuItemId || undefined
       );
 
       if (response?.review) {
@@ -55,6 +57,7 @@ export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
         setReviewSuccess("Thanks for your feedback!");
         setComment("");
         setRating(5);
+        setMenuItemId("");
       } else {
         setReviewError(response?.message || "Could not add review");
       }
@@ -113,11 +116,18 @@ export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
                   key={itemId}
                   className="bg-white rounded-lg shadow-md p-4 flex gap-4"
                 >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-24 h-24 object-cover rounded-lg"
-                  />
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-24 h-24 object-cover rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center text-gray-400 text-xs">
+                      No Image
+                    </div>
+                  )}
+
                   <div className="flex-1">
                     <h3 className="font-bold text-lg mb-1">{item.name}</h3>
                     <p className="text-gray-600 text-sm mb-2">
@@ -127,12 +137,28 @@ export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
                       <span className="text-lg font-bold text-orange-600">
                         ৳{item.price}
                       </span>
-                      <button
-                        onClick={() => onAddToCart(item, restaurantId)}
-                        className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
-                      >
-                        Add to Cart
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {item.reviewCount > 0 && (
+                          <span className="flex items-center gap-1 text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
+                            <Star
+                              size={14}
+                              className="text-yellow-500 fill-yellow-500"
+                            />
+                            <span className="font-semibold">
+                              {item.avgRating?.toFixed(1)}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              ({item.reviewCount})
+                            </span>
+                          </span>
+                        )}
+                        <button
+                          onClick={() => onAddToCart(item, restaurantId)}
+                          className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
+                        >
+                          Add to Cart
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -168,6 +194,27 @@ export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
                   ))}
                 </select>
               </label>
+
+              <div className="flex flex-col flex-1">
+                <label className="text-sm font-semibold text-gray-700 mb-1">
+                  Reviewed item (optional)
+                </label>
+                <select
+                  value={menuItemId}
+                  onChange={(e) => setMenuItemId(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-2"
+                >
+                  <option value="">Whole restaurant</option>
+                  {restaurant.items?.map((item) => {
+                    const itemId = item.id || item._id;
+                    return (
+                      <option key={itemId} value={itemId}>
+                        {item.name}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
 
               <input
                 type="text"
@@ -217,6 +264,11 @@ export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
                     <span className="font-semibold">{rev.rating}</span>
                   </div>
                 </div>
+                {rev.menuItem?.name && (
+                  <p className="text-xs text-orange-600 font-semibold mt-1">
+                    Item: {rev.menuItem.name}
+                  </p>
+                )}
                 {rev.comment && (
                   <p className="text-gray-700 text-sm">{rev.comment}</p>
                 )}

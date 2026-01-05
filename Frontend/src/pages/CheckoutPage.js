@@ -9,6 +9,7 @@ import {
   Truck,
   Store,
 } from "lucide-react";
+import { apiClient } from "../services/api";
 
 export const CheckoutPage = ({
   cart,
@@ -16,6 +17,7 @@ export const CheckoutPage = ({
   setCurrentPage,
   onRemoveFromCart,
   onAddToCart,
+  onClearCart,
 }) => {
   const [serviceType, setServiceType] = useState("delivery");
   const [paymentMethod, setPaymentMethod] = useState("bkash");
@@ -44,64 +46,130 @@ export const CheckoutPage = ({
       alert("Please enter your delivery address");
       return;
     }
+    const token =
+      localStorage.getItem("authToken") || localStorage.getItem("partnerToken");
+    if (!token) {
+      alert("Please log in to place an order.");
+      return;
+    }
 
     setIsProcessing(true);
 
-    // Simulate payment processing
-    setTimeout(() => {
-      const customerData = JSON.parse(localStorage.getItem("user") || "{}");
+    const restaurantId = selectedRestaurant?._id || selectedRestaurant?.id;
+    const payload = {
+      restaurantId,
+      items: cart.map((item) => ({
+        menuItem: item._id || item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      })),
+      totals: { subtotal, deliveryFee, total },
+      address:
+        serviceType === "delivery"
+          ? deliveryAddress
+          : selectedRestaurant?.address || selectedRestaurant?.name || "Pickup",
+      serviceType,
+      paymentMethod,
+      deliveryInstructions,
+    };
 
-      const order = {
-        id: `ORDER-${Date.now()}`,
-        items: cart,
-        restaurant: selectedRestaurant.name,
-        restaurantId: selectedRestaurant.id,
-        serviceType,
-        paymentMethod,
-        deliveryAddress:
-          serviceType === "delivery"
-            ? deliveryAddress
-            : selectedRestaurant.name,
-        deliveryInstructions,
-        subtotal,
-        deliveryFee,
-        total,
-        status: "confirmed", // New order status
-        createdAt: new Date().toLocaleDateString(),
-        customerName: customerData.name || "Guest",
-        customerPhone: customerData.phone || "N/A",
-        customerEmail: customerData.email || "N/A",
-      };
+    apiClient
+      .createOrder(payload, token)
+      .then((response) => {
+        const orderId = response?.orderId || `ORDER-${Date.now()}`;
 
-      // Save order to customer's orders
-      const orders = JSON.parse(localStorage.getItem("orders") || "[]");
-      orders.push(order);
-      localStorage.setItem("orders", JSON.stringify(orders));
+        // Local cache for UI/notifications
+        const customerData = JSON.parse(localStorage.getItem("user") || "{}");
+        const order = {
+          id: orderId,
+          items: cart,
+          restaurant: selectedRestaurant.name,
+          restaurantId,
+          serviceType,
+          paymentMethod,
+          deliveryAddress:
+            serviceType === "delivery"
+              ? deliveryAddress
+              : selectedRestaurant?.name,
+          deliveryInstructions,
+          subtotal,
+          deliveryFee,
+          total,
+          status: response?.status || "pending",
+          createdAt: new Date().toISOString(),
+          customerName: customerData.name || "Guest",
+          customerPhone: customerData.phone || "N/A",
+          customerEmail: customerData.email || "N/A",
+        };
 
-      // Save order notification to restaurant/partner
-      const restaurantOrders = JSON.parse(
-        localStorage.getItem("partner-orders") || "[]"
-      );
-      restaurantOrders.push({
-        ...order,
-        notificationRead: false,
-        notificationType: "new_order",
-      });
-      localStorage.setItem("partner-orders", JSON.stringify(restaurantOrders));
+        const orders = JSON.parse(localStorage.getItem("orders") || "[]");
+        orders.push(order);
+        localStorage.setItem("orders", JSON.stringify(orders));
 
-      setIsProcessing(false);
-      setShowSuccess(true);
-
-      // Show success message and redirect
-      setTimeout(() => {
-        alert(
-          `✅ Order placed successfully!\n\nOrder ID: ${
-            order.id
-          }\nPayment Method: ${paymentMethod.toUpperCase()}\nTotal: ৳${total}\n\n✅ Restaurant has been notified!`
+        const restaurantOrders = JSON.parse(
+          localStorage.getItem("partner-orders") || "[]"
         );
-        setCurrentPage("home");
-      }, 1000);
-    }, 2000);
+        restaurantOrders.push({
+          ...order,
+          notificationRead: false,
+          notificationType: "new_order",
+        });
+        localStorage.setItem(
+          "partner-orders",
+          JSON.stringify(restaurantOrders)
+        );
+
+        // Notifications
+        const partnerNotifs = JSON.parse(
+          localStorage.getItem("partner-notifications") || "[]"
+        );
+        partnerNotifs.unshift({
+          id: `pnotif-${Date.now()}`,
+          orderId,
+          message: `New order ${orderId} received`,
+          type: "info",
+          read: false,
+          createdAt: new Date().toISOString(),
+        });
+        localStorage.setItem(
+          "partner-notifications",
+          JSON.stringify(partnerNotifs.slice(0, 50))
+        );
+
+        const userNotifs = JSON.parse(
+          localStorage.getItem("user-notifications") || "[]"
+        );
+        userNotifs.unshift({
+          id: `unotif-${Date.now()}`,
+          orderId,
+          message: `Order ${orderId} placed. Awaiting restaurant confirmation.`,
+          type: "info",
+          read: false,
+          createdAt: new Date().toISOString(),
+        });
+        localStorage.setItem(
+          "user-notifications",
+          JSON.stringify(userNotifs.slice(0, 50))
+        );
+
+        setIsProcessing(false);
+        setShowSuccess(true);
+        setTimeout(() => {
+          alert(
+            `✅ Order placed successfully!\n\nOrder ID: ${orderId}\nPayment Method: ${paymentMethod.toUpperCase()}\nTotal: ৳${total}\n\n✅ Restaurant has been notified!`
+          );
+          if (onClearCart) {
+            onClearCart();
+          }
+          setCurrentPage("home");
+        }, 800);
+      })
+      .catch((err) => {
+        console.error("Order placement failed", err);
+        alert("Could not place order. Please try again.");
+      })
+      .finally(() => setIsProcessing(false));
   };
 
   return (

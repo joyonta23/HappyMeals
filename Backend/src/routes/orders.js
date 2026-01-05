@@ -1,6 +1,9 @@
 const express = require("express");
-const { body } = require("express-validator");
-const { createOrder } = require("../controllers/orderController");
+const { body, param } = require("express-validator");
+const {
+  createOrder,
+  updateOrderStatus,
+} = require("../controllers/orderController");
 const requireAuth = require("../middleware/auth");
 
 const router = express.Router();
@@ -17,6 +20,16 @@ router.post(
     body("address").notEmpty(),
   ],
   createOrder
+);
+
+router.put(
+  "/:orderId/status",
+  requireAuth(["partner", "admin"]),
+  [
+    param("orderId").notEmpty().withMessage("Order ID is required"),
+    body("status").notEmpty().withMessage("Status is required"),
+  ],
+  updateOrderStatus
 );
 
 module.exports = router;

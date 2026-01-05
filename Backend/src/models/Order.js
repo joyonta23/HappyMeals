@@ -2,7 +2,11 @@ const mongoose = require("mongoose");
 
 const orderItemSchema = new mongoose.Schema(
   {
-    menuItem: { type: mongoose.Schema.Types.ObjectId, ref: "MenuItem", required: true },
+    menuItem: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "MenuItem",
+      required: false,
+    },
     name: { type: String, required: true },
     price: { type: Number, required: true },
     quantity: { type: Number, required: true },
@@ -12,8 +16,13 @@ const orderItemSchema = new mongoose.Schema(
 
 const orderSchema = new mongoose.Schema(
   {
+    orderId: { type: String, unique: true, required: true },
     customer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    restaurant: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant", required: true },
+    restaurant: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Restaurant",
+      required: true,
+    },
     items: { type: [orderItemSchema], required: true },
     totals: {
       subtotal: { type: Number, required: true },
@@ -23,7 +32,15 @@ const orderSchema = new mongoose.Schema(
     address: { type: String, required: true },
     status: {
       type: String,
-      enum: ["pending", "preparing", "on-the-way", "delivered", "cancelled"],
+      enum: [
+        "pending",
+        "preparing",
+        "on-the-way",
+        "delivered",
+        "cancelled",
+        "accepted",
+        "rejected",
+      ],
       default: "pending",
     },
   },

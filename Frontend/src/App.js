@@ -11,6 +11,7 @@ import { RestaurantPartnerPage } from "./pages/RestaurantPartnerPage";
 import { CustomerSignupPage } from "./pages/CustomerSignupPage";
 import { CustomerProfilePage } from "./pages/CustomerProfilePage";
 import { ShopManagementPage } from "./pages/ShopManagementPage";
+import { CustomerOrderTrackingPage } from "./pages/CustomerOrderTrackingPage";
 import { apiClient } from "./services/api";
 
 // Mock Data - Replace with API calls
@@ -357,12 +358,28 @@ const App = () => {
   const [restaurants, setRestaurants] = useState(mockRestaurants);
   const [language, setLanguage] = useState("EN");
 
+  const mergeWithMockItems = (apiRestaurant) => {
+    const fallback = mockRestaurants.find(
+      (m) => m.name.toLowerCase() === (apiRestaurant.name || "").toLowerCase()
+    );
+
+    return {
+      ...fallback,
+      ...apiRestaurant,
+      id: apiRestaurant._id || apiRestaurant.id || fallback?.id,
+      items:
+        (apiRestaurant.items && apiRestaurant.items.length > 0
+          ? apiRestaurant.items
+          : fallback?.items) || [],
+    };
+  };
+
   // Fetch restaurants from API
   const loadRestaurants = async () => {
     try {
       const data = await apiClient.getRestaurants();
       if (Array.isArray(data) && data.length > 0) {
-        setRestaurants(data);
+        setRestaurants(data.map(mergeWithMockItems));
       } else {
         // Fallback to mock data if no restaurants exist
         setRestaurants(mockRestaurants);
@@ -377,8 +394,34 @@ const App = () => {
     loadRestaurants();
   }, []);
 
+  const handleRestaurantSelection = async (restaurant) => {
+    const id = restaurant._id || restaurant.id;
+    let enriched = restaurant;
+
+    try {
+      const fetched = await apiClient.getRestaurantById(id);
+      if (fetched) {
+        enriched = mergeWithMockItems({ ...restaurant, ...fetched });
+      }
+    } catch (error) {
+      console.error("Error loading restaurant details, using fallback", error);
+      const fallback = mergeWithMockItems(restaurant);
+      enriched = fallback;
+    }
+
+    setSelectedRestaurant(enriched);
+    setCurrentPage("restaurant");
+  };
+
   // Cart Management
   const addToCart = (item, restaurantId) => {
+    const customerToken = localStorage.getItem("authToken");
+    if (!customerToken) {
+      // Gate cart actions behind login
+      setShowLoginModal(true);
+      return;
+    }
+
     const existingItem = cart.find((c) => c.id === item.id);
     if (existingItem) {
       setCart(
@@ -402,6 +445,10 @@ const App = () => {
         )
       );
     }
+  };
+
+  const clearCart = () => {
+    setCart([]);
   };
 
   const getTotalPrice = () => {
@@ -455,6 +502,7 @@ const App = () => {
           restaurants={restaurants}
           setCurrentPage={setCurrentPage}
           setSelectedRestaurant={setSelectedRestaurant}
+          onSelectRestaurant={handleRestaurantSelection}
           onAddToCart={addToCart}
           cart={cart}
           language={language}
@@ -476,6 +524,7 @@ const App = () => {
           setCurrentPage={setCurrentPage}
           onRemoveFromCart={removeFromCart}
           onAddToCart={addToCart}
+          onClearCart={clearCart}
         />
       )}
 
@@ -518,6 +567,10 @@ const App = () => {
           onNavigate={setCurrentPage}
           language={language}
         />
+      )}
+
+      {currentPage === "order-tracking" && (
+        <CustomerOrderTrackingPage setCurrentPage={setCurrentPage} />
       )}
 
       <Footer language={language} />

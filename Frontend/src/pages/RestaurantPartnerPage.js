@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Upload, X } from "lucide-react";
 import { apiClient } from "../services/api";
 
 export const RestaurantPartnerPage = ({
@@ -16,17 +16,57 @@ export const RestaurantPartnerPage = ({
   };
 
   const [formData, setFormData] = useState(initialForm);
+  const [restaurantImage, setRestaurantImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [status, setStatus] = useState({
     loading: false,
     success: null,
     error: null,
   });
 
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setStatus({
+          loading: false,
+          success: null,
+          error: "Image size must be less than 5MB",
+        });
+        return;
+      }
+      setRestaurantImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setRestaurantImage(null);
+    setImagePreview(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setStatus({ loading: true, success: null, error: null });
-      const response = await apiClient.registerPartner(formData);
+
+      const formDataToSend = new FormData();
+      formDataToSend.append("restaurantName", formData.restaurantName);
+      formDataToSend.append("contactName", formData.contactName);
+      formDataToSend.append("phone", formData.phone);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("address", formData.address);
+      formDataToSend.append("city", formData.city);
+
+      if (restaurantImage) {
+        formDataToSend.append("restaurantImage", restaurantImage);
+      }
+
+      const response = await apiClient.registerPartner(formDataToSend);
 
       if (response?.partnerId) {
         setStatus({
@@ -37,6 +77,8 @@ export const RestaurantPartnerPage = ({
           error: null,
         });
         setFormData(initialForm);
+        setRestaurantImage(null);
+        setImagePreview(null);
         // Trigger refresh of restaurants list
         if (onPartnerRegistered) {
           setTimeout(() => onPartnerRegistered(), 1500);
@@ -168,6 +210,43 @@ export const RestaurantPartnerPage = ({
                   }
                   className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
+
+                {/* Restaurant Image Upload */}
+                <div className="border-2 border-dashed border-orange-300 rounded-lg p-4 bg-orange-50">
+                  <label className="cursor-pointer flex flex-col items-center gap-2">
+                    <Upload className="w-6 h-6 text-orange-500" />
+                    <span className="text-sm font-medium text-gray-700">
+                      Upload Restaurant Image (Optional)
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      JPG, PNG up to 5MB
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {imagePreview && (
+                    <div className="mt-4 relative">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-40 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <input
                   type="text"
                   placeholder="Contact Person Name *"

@@ -10,6 +10,7 @@ export const HomePage = ({
   onAddToCart,
   cart,
   language = "EN",
+  onSelectRestaurant,
 }) => {
   const [sortBy, setSortBy] = useState("relevance");
   const [filters, setFilters] = useState({
@@ -80,9 +81,13 @@ export const HomePage = ({
     return filtered;
   };
 
-  const handleSelectRestaurant = (restaurant) => {
-    setSelectedRestaurant(restaurant);
-    setCurrentPage("restaurant");
+  const handleSelectRestaurant = async (restaurant) => {
+    if (onSelectRestaurant) {
+      await onSelectRestaurant(restaurant);
+    } else {
+      setSelectedRestaurant(restaurant);
+      setCurrentPage("restaurant");
+    }
   };
 
   return (

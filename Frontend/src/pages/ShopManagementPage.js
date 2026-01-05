@@ -9,6 +9,7 @@ import {
   Phone,
   Clock,
 } from "lucide-react";
+import { apiClient } from "../services/api";
 
 export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -27,7 +28,9 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
     price: "",
     description: "",
     image: "",
+    preparationTime: "",
   });
+  const [itemImageFile, setItemImageFile] = useState(null);
   const [showAddItem, setShowAddItem] = useState(false);
 
   useEffect(() => {
@@ -42,8 +45,46 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
       deliveryTime: partner.deliveryTime || "30",
       serviceTypes: partner.serviceTypes || ["delivery"],
     });
-    setItems(partner.items || []);
+
+    // Fetch menu items from the database
+    fetchMenuItems();
   }, []);
+
+  const fetchMenuItems = async () => {
+    try {
+      const partner = JSON.parse(localStorage.getItem("partner") || "{}");
+      console.log("Partner data from localStorage:", partner);
+
+      const restaurantId =
+        partner.restaurant?._id ||
+        partner.restaurant?.id ||
+        partner.restaurantId;
+
+      console.log("Resolved restaurant ID:", restaurantId);
+
+      if (restaurantId) {
+        console.log("Fetching menu items for restaurant:", restaurantId);
+        const restaurantData = await apiClient.getRestaurantById(restaurantId);
+        console.log("Restaurant data received:", restaurantData);
+        if (restaurantData?.items) {
+          console.log(
+            "Loaded",
+            restaurantData.items.length,
+            "menu items from database"
+          );
+          setItems(restaurantData.items);
+        }
+      } else {
+        console.log("No restaurant ID found in partner data");
+        console.log("Partner object keys:", Object.keys(partner));
+      }
+    } catch (error) {
+      console.error("Error fetching menu items:", error);
+      // Fallback to localStorage if API fails
+      const partner = JSON.parse(localStorage.getItem("partner") || "{}");
+      setItems(partner.items || []);
+    }
+  };
 
   const handleUpdateShop = () => {
     const partner = JSON.parse(localStorage.getItem("partner") || "{}");
@@ -59,29 +100,90 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
       items,
     };
     localStorage.setItem("partner", JSON.stringify(updatedPartner));
-    setIsEditing(false);
     alert("Shop details updated successfully!");
   };
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (!newItem.name || !newItem.price) {
       alert("Please fill in item name and price");
       return;
     }
 
-    const item = {
-      id: Date.now(),
-      name: newItem.name,
-      price: parseInt(newItem.price),
-      description: newItem.description,
-      image:
-        newItem.image?.trim() ||
-        "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=200&h=150&fit=crop",
-    };
+    const token = localStorage.getItem("partnerToken");
+    if (!token) {
+      alert("Please log in again to add items.");
+      return;
+    }
 
-    setItems([...items, item]);
-    setNewItem({ name: "", price: "", description: "", image: "" });
-    setShowAddItem(false);
+    console.log("=== ADD MENU ITEM DEBUG ===");
+    console.log("Token:", token ? "Present" : "Missing");
+    console.log("Item name:", newItem.name);
+    console.log("Item price:", newItem.price);
+    console.log("Image file:", itemImageFile ? itemImageFile.name : "None");
+    console.log("Image URL:", newItem.image || "None");
+
+    const formData = new FormData();
+    formData.append("name", newItem.name);
+    formData.append("price", newItem.price);
+    if (newItem.description)
+      formData.append("description", newItem.description);
+    if (newItem.preparationTime) {
+      formData.append("preparationTime", newItem.preparationTime);
+    }
+    if (itemImageFile) {
+      console.log(
+        "Appending file to FormData:",
+        itemImageFile.name,
+        itemImageFile.type,
+        itemImageFile.size
+      );
+      formData.append("image", itemImageFile);
+    } else if (newItem.image?.trim()) {
+      console.log("Appending image URL to FormData:", newItem.image.trim());
+      formData.append("imageUrl", newItem.image.trim());
+    }
+
+    // Log FormData contents
+    console.log("FormData entries:");
+    for (let pair of formData.entries()) {
+      console.log(pair[0], ":", pair[1]);
+    }
+
+    try {
+      console.log("Sending request to API...");
+      const response = await apiClient.addMenuItem(formData, token);
+      console.log("API Response:", response);
+
+      // Check if the response indicates success
+      if (response?.item || response?.message?.includes("created")) {
+        console.log("Item created successfully, refetching menu items...");
+        alert("Item added to database! Refreshing menu...");
+
+        // Refetch all menu items from the database to stay in sync
+        await fetchMenuItems();
+
+        setNewItem({
+          name: "",
+          price: "",
+          description: "",
+          image: "",
+          preparationTime: "",
+        });
+        setItemImageFile(null);
+        setShowAddItem(false);
+        alert("Item added successfully and menu refreshed!");
+      } else if (response?.errors) {
+        const errorMsg = response.errors.map((e) => e.msg).join(", ");
+        console.error("Validation errors:", response.errors);
+        alert("Validation error: " + errorMsg);
+      } else {
+        console.error("Unexpected response:", response);
+        alert("Error: " + (response?.message || "Could not add item"));
+      }
+    } catch (error) {
+      console.error("Failed to add item - exception:", error);
+      alert("Network error: " + error.message + "\nCheck console for details.");
+    }
   };
 
   const handleRemoveItem = (id) => {
@@ -379,6 +481,15 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
                 />
                 <input
                   type="text"
+                  placeholder="Preparation time (e.g., 15 mins)"
+                  value={newItem.preparationTime}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, preparationTime: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <input
+                  type="text"
                   placeholder="Image URL (optional)"
                   value={newItem.image}
                   onChange={(e) =>
@@ -386,6 +497,21 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setItemImageFile(e.target.files?.[0] || null)
+                    }
+                    className="flex-1 text-sm"
+                  />
+                  {itemImageFile && (
+                    <span className="text-xs text-gray-600">
+                      {itemImageFile.name}
+                    </span>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => {
@@ -395,7 +521,9 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
                         price: "",
                         description: "",
                         image: "",
+                        preparationTime: "",
                       });
+                      setItemImageFile(null);
                     }}
                     className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
                   >

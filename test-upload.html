@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test Image Upload</title>
+  </head>
+  <body>
+    <h1>Test Menu Item Image Upload</h1>
+
+    <div>
+      <h3>Step 1: Get Partner Token</h3>
+      <p>Open browser console (F12) and run:</p>
+      <pre>localStorage.getItem("partnerToken")</pre>
+      <p>Copy the token (without quotes) and paste below:</p>
+      <input
+        type="text"
+        id="token"
+        placeholder="Partner token"
+        style="width: 500px; padding: 5px"
+      />
+    </div>
+
+    <div style="margin-top: 20px">
+      <h3>Step 2: Fill Item Details</h3>
+      <p>
+        Item Name:
+        <input type="text" id="name" value="Test Pizza" style="padding: 5px" />
+      </p>
+      <p>
+        Price:
+        <input type="number" id="price" value="299" style="padding: 5px" />
+      </p>
+      <p>
+        Description:
+        <input
+          type="text"
+          id="description"
+          value="Delicious test pizza"
+          style="padding: 5px; width: 300px"
+        />
+      </p>
+      <p>Image: <input type="file" id="imageFile" accept="image/*" /></p>
+    </div>
+
+    <div style="margin-top: 20px">
+      <button
+        onclick="testUpload()"
+        style="
+          padding: 10px 20px;
+          background: #4caf50;
+          color: white;
+          border: none;
+          cursor: pointer;
+        "
+      >
+        Test Upload
+      </button>
+    </div>
+
+    <div
+      id="result"
+      style="
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        display: none;
+      "
+    >
+      <h3>Result:</h3>
+      <pre id="resultText"></pre>
+    </div>
+
+    <script>
+      async function testUpload() {
+        const token = document.getElementById("token").value.trim();
+        const name = document.getElementById("name").value;
+        const price = document.getElementById("price").value;
+        const description = document.getElementById("description").value;
+        const fileInput = document.getElementById("imageFile");
+        const file = fileInput.files[0];
+
+        console.log("=== TEST UPLOAD ===");
+        console.log(
+          "Token:",
+          token ? "Present (" + token.substring(0, 20) + "...)" : "Missing"
+        );
+        console.log("Name:", name);
+        console.log("Price:", price);
+        console.log("Description:", description);
+        console.log(
+          "File:",
+          file ? file.name + " (" + file.size + " bytes)" : "No file"
+        );
+
+        if (!token) {
+          alert("Please enter the partner token first!");
+          return;
+        }
+
+        if (!name || !price) {
+          alert("Please fill in name and price!");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("name", name);
+        formData.append("price", price);
+        if (description) formData.append("description", description);
+        if (file) formData.append("image", file);
+
+        console.log("FormData entries:");
+        for (let pair of formData.entries()) {
+          if (pair[1] instanceof File) {
+            console.log(pair[0], ":", pair[1].name, pair[1].type, pair[1].size);
+          } else {
+            console.log(pair[0], ":", pair[1]);
+          }
+        }
+
+        try {
+          console.log(
+            "Sending request to http://localhost:5000/api/partners/items"
+          );
+          const response = await fetch(
+            "http://localhost:5000/api/partners/items",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              body: formData,
+            }
+          );
+
+          console.log("Response status:", response.status);
+          console.log(
+            "Response headers:",
+            Object.fromEntries(response.headers.entries())
+          );
+
+          const data = await response.json();
+          console.log("Response data:", data);
+
+          document.getElementById("result").style.display = "block";
+          document.getElementById("resultText").textContent = JSON.stringify(
+            data,
+            null,
+            2
+          );
+
+          if (response.ok) {
+            alert("Success! Check the result below and the console.");
+          } else {
+            alert("Error: " + (data.message || "Upload failed"));
+          }
+        } catch (error) {
+          console.error("Request error:", error);
+          document.getElementById("result").style.display = "block";
+          document.getElementById("resultText").textContent =
+            "Error: " + error.message;
+          alert("Request failed: " + error.message);
+        }
+      }
+    </script>
+  </body>
+</html>
