@@ -29,7 +29,9 @@ const registerPartner = async (req, res, next) => {
       city,
       address,
       phone,
-      image: "",
+      image:
+        "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop",
+      isActive: true,
     });
 
     const partner = await Partner.create({
@@ -83,20 +85,26 @@ const changePassword = async (req, res, next) => {
       return res.status(401).json({ message: "Current password is incorrect" });
     }
 
-    console.log("Old password hash:", partner.passwordHash.substring(0, 20) + "...");
+    console.log(
+      "Old password hash:",
+      partner.passwordHash.substring(0, 20) + "..."
+    );
     const newPasswordHash = await hashPassword(newPassword);
     console.log("New password hash:", newPasswordHash.substring(0, 20) + "...");
-    
+
     // Use findOneAndUpdate to bypass validation on unchanged fields
     const savedPartner = await Partner.findOneAndUpdate(
       { partnerId },
       { passwordHash: newPasswordHash },
       { new: true, runValidators: false }
     );
-    
+
     console.log("Password changed successfully for partner:", partnerId);
-    console.log("Saved password hash:", savedPartner.passwordHash.substring(0, 20) + "...");
-    
+    console.log(
+      "Saved password hash:",
+      savedPartner.passwordHash.substring(0, 20) + "..."
+    );
+
     res.json({ message: "Password changed successfully" });
   } catch (err) {
     console.error("Change password error:", err);

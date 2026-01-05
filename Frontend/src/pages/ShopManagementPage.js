@@ -26,6 +26,7 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
     name: "",
     price: "",
     description: "",
+    image: "",
   });
   const [showAddItem, setShowAddItem] = useState(false);
 
@@ -74,11 +75,12 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
       price: parseInt(newItem.price),
       description: newItem.description,
       image:
+        newItem.image?.trim() ||
         "https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=200&h=150&fit=crop",
     };
 
     setItems([...items, item]);
-    setNewItem({ name: "", price: "", description: "" });
+    setNewItem({ name: "", price: "", description: "", image: "" });
     setShowAddItem(false);
   };
 
@@ -375,11 +377,25 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
+                <input
+                  type="text"
+                  placeholder="Image URL (optional)"
+                  value={newItem.image}
+                  onChange={(e) =>
+                    setNewItem({ ...newItem, image: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
                 <div className="flex gap-2">
                   <button
                     onClick={() => {
                       setShowAddItem(false);
-                      setNewItem({ name: "", price: "", description: "" });
+                      setNewItem({
+                        name: "",
+                        price: "",
+                        description: "",
+                        image: "",
+                      });
                     }}
                     className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
                   >

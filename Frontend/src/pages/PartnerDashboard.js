@@ -18,6 +18,7 @@ import {
   Store,
   CreditCard,
 } from "lucide-react";
+import { apiClient } from "../services/api";
 
 export const PartnerDashboard = ({
   loggedInPartner,
@@ -31,12 +32,36 @@ export const PartnerDashboard = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [incomingOrders, setIncomingOrders] = useState([]);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+
+  const restaurantId =
+    loggedInPartner?.restaurant?._id || loggedInPartner?.restaurant?.id;
 
   // Load incoming orders from localStorage
   useEffect(() => {
     const orders = JSON.parse(localStorage.getItem("partner-orders") || "[]");
     setIncomingOrders(orders);
   }, [activeTab]);
+
+  useEffect(() => {
+    const loadReviews = async () => {
+      if (!restaurantId) return;
+      try {
+        setReviewsLoading(true);
+        const data = await apiClient.getRestaurantReviews(restaurantId);
+        if (Array.isArray(data)) {
+          setReviews(data);
+        }
+      } catch (err) {
+        console.error("Failed to load reviews", err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    loadReviews();
+  }, [restaurantId]);
 
   // Menu state
   const [menuItems, setMenuItems] = useState([
@@ -100,6 +125,16 @@ export const PartnerDashboard = ({
   const expenses = analyticsData.expenses.total;
   const profit = revenue - expenses;
   const profitMargin = ((profit / revenue) * 100).toFixed(1);
+
+  const reviewList = reviews.length ? reviews : analyticsData.reviews;
+  const averageRatingDisplay = reviewList.length
+    ? Math.round(
+        (reviewList.reduce((sum, r) => sum + (r.rating || 0), 0) /
+          reviewList.length) *
+          10
+      ) / 10
+    : analyticsData.averageRating;
+  const reviewCount = reviewList.length || analyticsData.reviews.length;
 
   // Menu Management Functions
   const handleAddItem = () => {
@@ -361,10 +396,10 @@ export const PartnerDashboard = ({
                   </div>
                 </div>
                 <p className="text-3xl font-bold text-gray-800">
-                  {analyticsData.averageRating}
+                  {averageRatingDisplay}
                 </p>
                 <p className="text-sm text-yellow-600 mt-2">
-                  From {analyticsData.reviews.length} reviews
+                  From {reviewCount} reviews
                 </p>
               </div>
             </div>
@@ -604,33 +639,50 @@ export const PartnerDashboard = ({
                 <h2 className="text-xl font-bold mb-6">
                   Recent Customer Reviews
                 </h2>
+                {reviewsLoading && (
+                  <p className="text-sm text-gray-500">Loading reviews...</p>
+                )}
                 <div className="space-y-4">
-                  {analyticsData.reviews.map((review, idx) => (
-                    <div key={idx} className="border-b pb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold text-gray-800">
-                          {review.customer}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              size={14}
-                              className={
-                                i < review.rating
-                                  ? "text-yellow-500 fill-yellow-500"
-                                  : "text-gray-300"
-                              }
-                            />
-                          ))}
+                  {reviewList.map((review, idx) => {
+                    const name =
+                      review.userName || review.customer || "Customer";
+                    const date = review.createdAt
+                      ? new Date(review.createdAt).toLocaleDateString()
+                      : review.date;
+                    return (
+                      <div key={review._id || idx} className="border-b pb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-semibold text-gray-800">
+                            {name}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                size={14}
+                                className={
+                                  i < review.rating
+                                    ? "text-yellow-500 fill-yellow-500"
+                                    : "text-gray-300"
+                                }
+                              />
+                            ))}
+                          </div>
                         </div>
+                        {review.comment && (
+                          <p className="text-sm text-gray-600 mb-1">
+                            {review.comment}
+                          </p>
+                        )}
+                        {date && (
+                          <p className="text-xs text-gray-500">{date}</p>
+                        )}
                       </div>
-                      <p className="text-sm text-gray-600 mb-1">
-                        {review.comment}
-                      </p>
-                      <p className="text-xs text-gray-500">{review.date}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
+                  {reviewList.length === 0 && !reviewsLoading && (
+                    <p className="text-sm text-gray-500">No reviews yet.</p>
+                  )}
                 </div>
               </div>
             </div>

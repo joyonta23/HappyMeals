@@ -11,6 +11,7 @@ import { RestaurantPartnerPage } from "./pages/RestaurantPartnerPage";
 import { CustomerSignupPage } from "./pages/CustomerSignupPage";
 import { CustomerProfilePage } from "./pages/CustomerProfilePage";
 import { ShopManagementPage } from "./pages/ShopManagementPage";
+import { apiClient } from "./services/api";
 
 // Mock Data - Replace with API calls
 const mockRestaurants = [
@@ -356,14 +357,19 @@ const App = () => {
   const [restaurants, setRestaurants] = useState(mockRestaurants);
   const [language, setLanguage] = useState("EN");
 
-  // Fetch restaurants (replace with API call)
+  // Fetch restaurants from API
   const loadRestaurants = async () => {
     try {
-      // const data = await apiClient.getRestaurants();
-      // setRestaurants(data);
-      // For now using mock data
+      const data = await apiClient.getRestaurants();
+      if (Array.isArray(data) && data.length > 0) {
+        setRestaurants(data);
+      } else {
+        // Fallback to mock data if no restaurants exist
+        setRestaurants(mockRestaurants);
+      }
     } catch (error) {
       console.error("Error loading restaurants:", error);
+      setRestaurants(mockRestaurants);
     }
   };
 
@@ -474,7 +480,10 @@ const App = () => {
       )}
 
       {currentPage === "restaurant-partner" && (
-        <RestaurantPartnerPage setCurrentPage={setCurrentPage} />
+        <RestaurantPartnerPage
+          setCurrentPage={setCurrentPage}
+          onPartnerRegistered={loadRestaurants}
+        />
       )}
 
       {currentPage === "partner-dashboard" && loggedInPartner && (

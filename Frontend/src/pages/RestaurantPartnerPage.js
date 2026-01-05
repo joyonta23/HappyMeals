@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { apiClient } from "../services/api";
 
-export const RestaurantPartnerPage = ({ setCurrentPage }) => {
+export const RestaurantPartnerPage = ({
+  setCurrentPage,
+  onPartnerRegistered,
+}) => {
   const initialForm = {
     restaurantName: "",
     contactName: "",
@@ -34,6 +37,10 @@ export const RestaurantPartnerPage = ({ setCurrentPage }) => {
           error: null,
         });
         setFormData(initialForm);
+        // Trigger refresh of restaurants list
+        if (onPartnerRegistered) {
+          setTimeout(() => onPartnerRegistered(), 1500);
+        }
       } else {
         setStatus({
           loading: false,

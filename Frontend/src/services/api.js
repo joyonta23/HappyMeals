@@ -1,5 +1,6 @@
 // API Service - Backend endpoints
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 const withAuth = (token) => (token ? { Authorization: `Bearer ${token}` } : {});
 
@@ -8,12 +9,12 @@ export const apiClient = {
   getRestaurants: async (filters = {}) => {
     try {
       const response = await fetch(`${API_BASE_URL}/restaurants`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
       });
       return await response.json();
     } catch (error) {
-      console.error('Error fetching restaurants:', error);
+      console.error("Error fetching restaurants:", error);
       throw error;
     }
   },
@@ -23,7 +24,43 @@ export const apiClient = {
       const response = await fetch(`${API_BASE_URL}/restaurants/${id}`);
       return await response.json();
     } catch (error) {
-      console.error('Error fetching restaurant:', error);
+      console.error("Error fetching restaurant:", error);
+      throw error;
+    }
+  },
+
+  // Reviews
+  getRestaurantReviews: async (restaurantId) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/restaurants/${restaurantId}/reviews`
+      );
+      return await response.json();
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      throw error;
+    }
+  },
+
+  addRestaurantReview: async (
+    restaurantId,
+    rating,
+    comment,
+    token,
+    menuItemId
+  ) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/restaurants/${restaurantId}/reviews`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...withAuth(token) },
+          body: JSON.stringify({ rating, comment, menuItemId }),
+        }
+      );
+      return await response.json();
+    } catch (error) {
+      console.error("Error adding review:", error);
       throw error;
     }
   },
@@ -32,13 +69,13 @@ export const apiClient = {
   partnerLogin: async (partnerId, password) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/partner-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ partnerId, password })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ partnerId, password }),
       });
       return await response.json();
     } catch (error) {
-      console.error('Error logging in:', error);
+      console.error("Error logging in:", error);
       throw error;
     }
   },
@@ -46,13 +83,13 @@ export const apiClient = {
   customerSignup: async (userData) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/customer-signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
       });
       return await response.json();
     } catch (error) {
-      console.error('Error signing up:', error);
+      console.error("Error signing up:", error);
       throw error;
     }
   },
@@ -60,13 +97,13 @@ export const apiClient = {
   customerLogin: async (email, password) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/customer-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
       return await response.json();
     } catch (error) {
-      console.error('Error logging in:', error);
+      console.error("Error logging in:", error);
       throw error;
     }
   },
@@ -74,13 +111,13 @@ export const apiClient = {
   updateCustomerProfile: async (profileData, token) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/customer-profile`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...withAuth(token) },
-        body: JSON.stringify(profileData)
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...withAuth(token) },
+        body: JSON.stringify(profileData),
       });
       return await response.json();
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error("Error updating profile:", error);
       throw error;
     }
   },
@@ -89,13 +126,13 @@ export const apiClient = {
   createOrder: async (orderData, token) => {
     try {
       const response = await fetch(`${API_BASE_URL}/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...withAuth(token) },
-        body: JSON.stringify(orderData)
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...withAuth(token) },
+        body: JSON.stringify(orderData),
       });
       return await response.json();
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error("Error creating order:", error);
       throw error;
     }
   },
@@ -104,11 +141,11 @@ export const apiClient = {
   getPartnerAnalytics: async (partnerId, token) => {
     try {
       const response = await fetch(`${API_BASE_URL}/analytics/${partnerId}`, {
-        headers: { ...withAuth(token) }
+        headers: { ...withAuth(token) },
       });
       return await response.json();
     } catch (error) {
-      console.error('Error fetching analytics:', error);
+      console.error("Error fetching analytics:", error);
       throw error;
     }
   },
@@ -117,13 +154,13 @@ export const apiClient = {
   registerPartner: async (formData) => {
     try {
       const response = await fetch(`${API_BASE_URL}/partners/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       });
       return await response.json();
     } catch (error) {
-      console.error('Error registering partner:', error);
+      console.error("Error registering partner:", error);
       throw error;
     }
   },
@@ -132,14 +169,14 @@ export const apiClient = {
   changePartnerPassword: async (currentPassword, newPassword, token) => {
     try {
       const response = await fetch(`${API_BASE_URL}/partners/change-password`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...withAuth(token) },
-        body: JSON.stringify({ currentPassword, newPassword })
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...withAuth(token) },
+        body: JSON.stringify({ currentPassword, newPassword }),
       });
       return await response.json();
     } catch (error) {
-      console.error('Error changing password:', error);
+      console.error("Error changing password:", error);
       throw error;
     }
-  }
+  },
 };
