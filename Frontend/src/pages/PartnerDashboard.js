@@ -31,6 +31,13 @@ export const PartnerDashboard = ({
   const [editingItem, setEditingItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [activeOfferItem, setActiveOfferItem] = useState(null);
+  const [offerForm, setOfferForm] = useState({
+    discountPercent: 0,
+    freeDelivery: false,
+    offerExpires: "",
+  });
+  const [menuLoading, setMenuLoading] = useState(false);
   const [incomingOrders, setIncomingOrders] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -264,6 +271,32 @@ export const PartnerDashboard = ({
     setShowMenuModal(true);
   };
 
+  // Fetch menu items from backend when menu tab is active
+  React.useEffect(() => {
+    const loadMenuFromApi = async () => {
+      const restaurantId =
+        loggedInPartner?.restaurant?._id ||
+        loggedInPartner?.restaurant?.id ||
+        loggedInPartner?.restaurantId;
+      if (!restaurantId) return;
+      try {
+        setMenuLoading(true);
+        const data = await apiClient.getRestaurantById(restaurantId);
+        if (data?.items && Array.isArray(data.items)) {
+          setMenuItems(data.items);
+        }
+      } catch (err) {
+        console.error("Failed to load menu items", err);
+      } finally {
+        setMenuLoading(false);
+      }
+    };
+
+    if (activeTab === "menu") {
+      loadMenuFromApi();
+    }
+  }, [activeTab, loggedInPartner]);
+
   const handleEditItem = (item) => {
     setEditingItem(item);
     setFormData(item);
@@ -276,6 +309,45 @@ export const PartnerDashboard = ({
     }
   };
 
+  const handleUpdateOffer = async (itemId, offer) => {
+    const isMongoId = /^[a-f\d]{24}$/i.test(String(itemId));
+    if (!itemId || !isMongoId) {
+      alert("This item cannot be updated until it is saved in the database.");
+      return;
+    }
+    const token = localStorage.getItem("partnerToken");
+    if (!token) {
+      alert("Please log in again to update offers.");
+      return;
+    }
+    try {
+      const payload = {
+        discountPercent: offer.discountPercent,
+        freeDelivery: !!offer.freeDelivery,
+        offerExpires: offer.offerExpires || null,
+      };
+      const res = await apiClient.updateItemOffer(itemId, payload, token);
+      if (res?.item) {
+        setMenuItems((prev) =>
+          prev.map((it) =>
+            String(it._id || it.id) === String(itemId)
+              ? { ...it, ...res.item }
+              : it
+          )
+        );
+        setActiveOfferItem(null);
+        alert("Offer updated");
+      } else if (res?.errors) {
+        alert("Validation error: " + res.errors.map((e) => e.msg).join(", "));
+      } else {
+        alert(res?.message || "Could not update offer");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating offer");
+    }
+  };
+
   const handleToggleAvailability = (id) => {
     setMenuItems(
       menuItems.map((item) =>
@@ -284,14 +356,57 @@ export const PartnerDashboard = ({
     );
   };
 
-  const handleSaveItem = () => {
-    if (!formData.name || !formData.category || !formData.price) {
-      alert("Please fill in all required fields");
+  const handleSaveItem = async () => {
+    if (!formData.name || !formData.price) {
+      alert("Please fill in the required fields: name and price");
       return;
     }
 
-    if (editingItem) {
-      // Update existing item
+    // For now, only persist creation; editing existing mock items will remain local
+    if (!editingItem) {
+      const token = localStorage.getItem("partnerToken");
+      if (!token) {
+        alert("Please log in again to add items.");
+        return;
+      }
+      try {
+        const fd = new FormData();
+        fd.append("name", formData.name);
+        fd.append("price", String(formData.price));
+        if (formData.description)
+          fd.append("description", formData.description);
+        if (formData.preparationTime)
+          fd.append("preparationTime", formData.preparationTime);
+        fd.append("available", formData.available ? "true" : "false");
+        if (formData.image) fd.append("imageUrl", formData.image);
+
+        const res = await apiClient.addMenuItem(fd, token);
+        if (res?.item) {
+          // Prepend the saved item (with real _id) and close modal
+          setMenuItems((prev) => [res.item, ...prev]);
+          setShowMenuModal(false);
+          setEditingItem(null);
+          setFormData({
+            name: "",
+            category: "",
+            price: "",
+            description: "",
+            image: "",
+            available: true,
+            preparationTime: "",
+          });
+          alert("Menu item saved");
+        } else if (res?.errors) {
+          alert("Validation error: " + res.errors.map((e) => e.msg).join(", "));
+        } else {
+          alert(res?.message || "Could not save item");
+        }
+      } catch (err) {
+        console.error("Error saving item", err);
+        alert("Error saving item");
+      }
+    } else {
+      // Keep existing local edit behavior (no backend endpoint yet)
       setMenuItems(
         menuItems.map((item) =>
           item.id === editingItem.id
@@ -299,16 +414,9 @@ export const PartnerDashboard = ({
             : item
         )
       );
-    } else {
-      // Add new item
-      const newItem = {
-        ...formData,
-        id: Math.max(...menuItems.map((i) => i.id), 0) + 1,
-      };
-      setMenuItems([...menuItems, newItem]);
+      setShowMenuModal(false);
+      setEditingItem(null);
     }
-
-    setShowMenuModal(false);
   };
 
   const getFilteredMenuItems = () => {
@@ -330,6 +438,20 @@ export const PartnerDashboard = ({
 
     return filtered;
   };
+
+  // Offer summary chips for menu tab
+  const nowForOffers = new Date();
+  const activeDealCount = menuItems.filter((it) => {
+    const expiresAt = it?.offerExpires ? new Date(it.offerExpires) : null;
+    return (
+      Number(it?.discountPercent || 0) > 0 &&
+      (!expiresAt || expiresAt > nowForOffers)
+    );
+  }).length;
+  const activeFreeDeliveryCount = menuItems.filter((it) => {
+    const expiresAt = it?.offerExpires ? new Date(it.offerExpires) : null;
+    return !!it?.freeDelivery && (!expiresAt || expiresAt > nowForOffers);
+  }).length;
 
   return (
     <div className="bg-gray-50 min-h-screen pb-12">
@@ -514,6 +636,48 @@ export const PartnerDashboard = ({
                 <p className="text-sm text-yellow-600 mt-2">
                   From {reviewCount} reviews
                 </p>
+              </div>
+            </div>
+
+            {/* Rating Breakdown - Only visible to partners */}
+            <div className="bg-white rounded-lg shadow-md p-6 mb-8 hover-lift">
+              <h2 className="text-xl font-bold mb-6">Rating Breakdown</h2>
+              <div className="grid grid-cols-5 gap-4">
+                {[5, 4, 3, 2, 1].map((stars) => {
+                  const count = analyticsData.ratingBreakdown?.[stars] || 0;
+                  const percentage =
+                    reviewCount > 0 ? (count / reviewCount) * 100 : 0;
+                  return (
+                    <div key={stars} className="text-center">
+                      <div className="mb-2">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              size={14}
+                              className={
+                                i < stars
+                                  ? "text-yellow-500 fill-yellow-500"
+                                  : "text-gray-300"
+                              }
+                            />
+                          ))}
+                        </div>
+                        <p className="text-sm font-semibold text-gray-700 mb-2">
+                          {stars}★
+                        </p>
+                      </div>
+                      <div className="bg-gray-200 rounded-full h-16 flex flex-col items-center justify-center">
+                        <p className="text-lg font-bold text-gray-800">
+                          {count}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {percentage.toFixed(0)}%
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -1010,6 +1174,25 @@ export const PartnerDashboard = ({
                 <p className="text-gray-600 mt-1">
                   Manage your restaurant menu items
                 </p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {activeDealCount > 0 && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-orange-50 text-orange-700 font-semibold">
+                      {activeDealCount} item{activeDealCount > 1 ? "s" : ""} on
+                      deal
+                    </span>
+                  )}
+                  {activeFreeDeliveryCount > 0 && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-green-700 font-semibold">
+                      {activeFreeDeliveryCount} item
+                      {activeFreeDeliveryCount > 1 ? "s" : ""} free delivery
+                    </span>
+                  )}
+                  {menuLoading && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                      Loading menu…
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 onClick={handleAddItem}
@@ -1114,8 +1297,30 @@ export const PartnerDashboard = ({
                       </div>
                     </div>
 
+                    {/* Offer badges */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {Number(item.discountPercent || 0) > 0 && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-orange-50 text-orange-700 font-semibold">
+                          {Number(item.discountPercent)}% OFF
+                        </span>
+                      )}
+                      {item.freeDelivery && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-green-50 text-green-700 font-semibold">
+                          Free delivery
+                        </span>
+                      )}
+                      {item.offerExpires && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                          Until{" "}
+                          {new Date(item.offerExpires)
+                            .toISOString()
+                            .slice(0, 10)}
+                        </span>
+                      )}
+                    </div>
+
                     {/* Action Buttons */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <button
                         onClick={() => handleToggleAvailability(item.id)}
                         className={`flex-1 px-4 py-2 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
@@ -1143,7 +1348,127 @@ export const PartnerDashboard = ({
                       >
                         <Trash2 size={18} />
                       </button>
+                      {(() => {
+                        const itemId = item._id || item.id;
+                        const hasMongoId = /^[a-f\d]{24}$/i.test(
+                          String(itemId)
+                        );
+                        if (!hasMongoId) {
+                          return (
+                            <button
+                              disabled
+                              title="Save this item first to enable offers"
+                              className="px-4 py-2 bg-gray-200 text-gray-500 rounded-lg cursor-not-allowed"
+                            >
+                              Edit Offer
+                            </button>
+                          );
+                        }
+                        return (
+                          <button
+                            onClick={() => {
+                              const expires = item.offerExpires
+                                ? new Date(item.offerExpires)
+                                    .toISOString()
+                                    .slice(0, 10)
+                                : "";
+                              setActiveOfferItem(
+                                String(activeOfferItem) === String(itemId)
+                                  ? null
+                                  : itemId
+                              );
+                              setOfferForm({
+                                discountPercent: Number(
+                                  item.discountPercent || 0
+                                ),
+                                freeDelivery: !!item.freeDelivery,
+                                offerExpires: expires,
+                              });
+                            }}
+                            className="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition"
+                          >
+                            Edit Offer
+                          </button>
+                        );
+                      })()}
                     </div>
+
+                    {String(activeOfferItem) ===
+                      String(item._id || item.id) && (
+                      <div className="mt-3 p-3 border border-orange-200 rounded-lg bg-orange-50 space-y-2">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-xs text-gray-700 mb-1">
+                              Discount %
+                            </label>
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={offerForm.discountPercent}
+                              onChange={(e) =>
+                                setOfferForm({
+                                  ...offerForm,
+                                  discountPercent: Number(e.target.value || 0),
+                                })
+                              }
+                              className="w-full px-2 py-1 border border-gray-300 rounded"
+                            />
+                          </div>
+                          <div className="flex items-end">
+                            <label className="inline-flex items-center gap-2 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={offerForm.freeDelivery}
+                                onChange={(e) =>
+                                  setOfferForm({
+                                    ...offerForm,
+                                    freeDelivery: e.target.checked,
+                                  })
+                                }
+                              />
+                              Free delivery
+                            </label>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-700 mb-1">
+                              Expires on
+                            </label>
+                            <input
+                              type="date"
+                              value={offerForm.offerExpires}
+                              onChange={(e) =>
+                                setOfferForm({
+                                  ...offerForm,
+                                  offerExpires: e.target.value,
+                                })
+                              }
+                              className="w-full px-2 py-1 border border-gray-300 rounded"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => setActiveOfferItem(null)}
+                            className="px-3 py-2 border border-gray-300 rounded text-sm"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleUpdateOffer(item._id || item.id, {
+                                discountPercent: offerForm.discountPercent,
+                                freeDelivery: offerForm.freeDelivery,
+                                offerExpires: offerForm.offerExpires || null,
+                              })
+                            }
+                            className="px-3 py-2 bg-orange-600 text-white rounded text-sm hover:bg-orange-700"
+                          >
+                            Save Offer
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

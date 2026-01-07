@@ -32,6 +32,12 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
   });
   const [itemImageFile, setItemImageFile] = useState(null);
   const [showAddItem, setShowAddItem] = useState(false);
+  const [activeOfferItem, setActiveOfferItem] = useState(null);
+  const [offerForm, setOfferForm] = useState({
+    discountPercent: 0,
+    freeDelivery: false,
+    offerExpires: "",
+  });
 
   useEffect(() => {
     // Initialize with partner data from localStorage
@@ -83,6 +89,36 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
       // Fallback to localStorage if API fails
       const partner = JSON.parse(localStorage.getItem("partner") || "{}");
       setItems(partner.items || []);
+    }
+  };
+
+  const handleUpdateOffer = async (itemId, offer) => {
+    const token = localStorage.getItem("partnerToken");
+    if (!token) return alert("Please log in again to update offers.");
+    try {
+      const payload = {
+        discountPercent: offer.discountPercent,
+        freeDelivery: !!offer.freeDelivery,
+        offerExpires: offer.offerExpires || null,
+      };
+      const res = await apiClient.updateItemOffer(itemId, payload, token);
+      if (res?.item) {
+        // update local items
+        setItems((prev) =>
+          prev.map((it) =>
+            String(it._id || it.id) === String(itemId) ? res.item : it
+          )
+        );
+        alert("Offer updated");
+        setActiveOfferItem(null);
+      } else if (res?.errors) {
+        alert("Validation error: " + res.errors.map((e) => e.msg).join(", "));
+      } else {
+        alert(res?.message || "Could not update offer");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating offer");
     }
   };
 
@@ -547,28 +583,149 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
                 No menu items yet
               </p>
             ) : (
-              items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-orange-300 transition"
-                >
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-800">{item.name}</p>
-                    <p className="text-sm text-gray-600">{item.description}</p>
-                    <p className="text-orange-600 font-semibold mt-1">
-                      ৳{item.price}
-                    </p>
+              items.map((item) => {
+                const itemId = item._id || item.id;
+                const isOfferOpen = String(activeOfferItem) === String(itemId);
+                const currentDiscount = Number(item.discountPercent || 0);
+                const currentFreeDelivery = !!item.freeDelivery;
+                const currentExpiry = item.offerExpires
+                  ? new Date(item.offerExpires).toISOString().slice(0, 10)
+                  : "";
+                return (
+                  <div
+                    key={itemId}
+                    className="p-4 border border-gray-200 rounded-lg hover:border-orange-300 transition"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-800">
+                          {item.name}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {item.description}
+                        </p>
+                        <div className="mt-1 flex items-center gap-3">
+                          <p className="text-orange-600 font-semibold">
+                            ৳{item.price}
+                          </p>
+                          {currentDiscount > 0 && (
+                            <span className="px-2 py-0.5 text-xs rounded bg-green-100 text-green-700 font-semibold">
+                              {currentDiscount}% OFF
+                            </span>
+                          )}
+                          {currentFreeDelivery && (
+                            <span className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700 font-semibold">
+                              Free delivery
+                            </span>
+                          )}
+                          {currentExpiry && (
+                            <span className="px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-700">
+                              Until {currentExpiry}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {isEditing && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setActiveOfferItem(isOfferOpen ? null : itemId);
+                              setOfferForm({
+                                discountPercent: currentDiscount,
+                                freeDelivery: currentFreeDelivery,
+                                offerExpires: currentExpiry,
+                              });
+                            }}
+                            className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                          >
+                            {isOfferOpen ? "Close Offer" : "Edit Offer"}
+                          </button>
+                          <button
+                            onClick={() => handleRemoveItem(itemId)}
+                            className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {isEditing && isOfferOpen && (
+                      <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3 bg-orange-50 border border-orange-200 rounded-lg p-3">
+                        <div>
+                          <label className="block text-xs text-gray-700 mb-1">
+                            Discount %
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            value={offerForm.discountPercent}
+                            onChange={(e) =>
+                              setOfferForm({
+                                ...offerForm,
+                                discountPercent: Number(e.target.value || 0),
+                              })
+                            }
+                            className="w-full px-2 py-1 border border-gray-300 rounded"
+                          />
+                        </div>
+                        <div className="flex items-end">
+                          <label className="inline-flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={offerForm.freeDelivery}
+                              onChange={(e) =>
+                                setOfferForm({
+                                  ...offerForm,
+                                  freeDelivery: e.target.checked,
+                                })
+                              }
+                            />
+                            Free delivery
+                          </label>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-700 mb-1">
+                            Expires on
+                          </label>
+                          <input
+                            type="date"
+                            value={offerForm.offerExpires}
+                            onChange={(e) =>
+                              setOfferForm({
+                                ...offerForm,
+                                offerExpires: e.target.value,
+                              })
+                            }
+                            className="w-full px-2 py-1 border border-gray-300 rounded"
+                          />
+                        </div>
+                        <div className="flex items-end justify-end gap-2">
+                          <button
+                            onClick={() => setActiveOfferItem(null)}
+                            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleUpdateOffer(itemId, {
+                                discountPercent: offerForm.discountPercent,
+                                freeDelivery: offerForm.freeDelivery,
+                                offerExpires: offerForm.offerExpires || null,
+                              })
+                            }
+                            className="px-3 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
+                          >
+                            Save Offer
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {isEditing && (
-                    <button
-                      onClick={() => handleRemoveItem(item.id)}
-                      className="ml-4 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

@@ -23,6 +23,9 @@ export const CustomerSignupPage = ({ setCurrentPage }) => {
     try {
       const response = await apiClient.customerSignup(formData);
       if (response.token) {
+        // Persist login so UI knows user is signed in
+        localStorage.setItem("authToken", response.token);
+        if (response.user) localStorage.setItem("user", JSON.stringify(response.user));
         setShowSuccess(true);
       } else {
         alert(response.message || "Signup failed. Please try again.");

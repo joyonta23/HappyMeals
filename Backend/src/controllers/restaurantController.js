@@ -33,7 +33,32 @@ const getRestaurants = async (_req, res, next) => {
       ];
     }
 
-    res.json(restaurants);
+    // Populate items with offer fields for each restaurant
+    const restaurantIds = restaurants.map((r) => r._id);
+    const allItems = await MenuItem.find({
+      restaurant: { $in: restaurantIds },
+      available: true,
+    })
+      .select(
+        "restaurant name price discountPercent freeDelivery offerExpires image"
+      )
+      .lean();
+
+    // Group items by restaurant
+    const itemsByRestaurant = allItems.reduce((acc, item) => {
+      const rid = String(item.restaurant);
+      if (!acc[rid]) acc[rid] = [];
+      acc[rid].push(item);
+      return acc;
+    }, {});
+
+    // Attach items to each restaurant
+    const enrichedRestaurants = restaurants.map((r) => ({
+      ...r,
+      items: itemsByRestaurant[String(r._id)] || [],
+    }));
+
+    res.json(enrichedRestaurants);
   } catch (err) {
     next(err);
   }
@@ -223,4 +248,73 @@ const getReviews = async (req, res, next) => {
   }
 };
 
-module.exports = { getRestaurants, getRestaurantById, addReview, getReviews };
+// Search menu items and restaurants by text query
+const searchItems = async (req, res, next) => {
+  try {
+    const q = (req.query.q || "").trim();
+    if (!q || q.length < 2) return res.json([]);
+
+    const regex = new RegExp(q.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
+
+    // Find menu items that match name or description
+    const items = await MenuItem.find({
+      available: true,
+      $or: [{ name: regex }, { description: regex }],
+    })
+      .limit(30)
+      .populate("restaurant", "name cuisine")
+      .lean();
+
+    // Also find restaurants that match name or cuisine and include some items
+    const restaurants = await Restaurant.find({
+      $or: [{ name: regex }, { cuisine: regex }],
+      isActive: true,
+    })
+      .limit(10)
+      .lean();
+
+    const restaurantItems = [];
+    if (restaurants.length) {
+      const restaurantIds = restaurants.map((r) => r._id);
+      const itemsForRestaurants = await MenuItem.find({
+        restaurant: { $in: restaurantIds },
+        available: true,
+      })
+        .limit(30)
+        .populate("restaurant", "name cuisine")
+        .lean();
+      restaurantItems.push(...itemsForRestaurants);
+    }
+
+    // Combine and dedupe by item id
+    const combined = [...items, ...restaurantItems];
+    const seen = new Set();
+    const output = [];
+    for (const it of combined) {
+      const id = (it._id || it.id).toString();
+      if (seen.has(id)) continue;
+      seen.add(id);
+      output.push({
+        name: it.name,
+        description: it.description || "",
+        restaurant: it.restaurant?.name || "",
+        cuisine: it.restaurant?.cuisine || "",
+        itemId: it._id || it.id,
+        restaurantId: it.restaurant?._id || it.restaurant?.id,
+      });
+      if (output.length >= 20) break;
+    }
+
+    res.json(output);
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = {
+  getRestaurants,
+  getRestaurantById,
+  addReview,
+  getReviews,
+  searchItems,
+};

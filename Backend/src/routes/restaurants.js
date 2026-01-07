@@ -11,6 +11,7 @@ const requireAuth = require("../middleware/auth");
 const router = express.Router();
 
 router.get("/", getRestaurants);
+router.get("/search", require("../controllers/restaurantController").searchItems);
 router.get("/:id", getRestaurantById);
 
 router.post(

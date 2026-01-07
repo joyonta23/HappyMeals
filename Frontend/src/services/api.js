@@ -150,6 +150,44 @@ export const apiClient = {
     }
   },
 
+  // Public popular dishes
+  getPopularDishes: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/analytics/popular`);
+      return await response.json();
+    } catch (error) {
+      console.error("Error fetching popular dishes:", error);
+      throw error;
+    }
+  },
+
+  // Search items via backend text search
+  search: async (q) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/restaurants/search?q=${encodeURIComponent(
+        q
+      )}`);
+      return await response.json();
+    } catch (error) {
+      console.error("Error searching:", error);
+      return [];
+    }
+  },
+  // Partner: update item offers
+  updateItemOffer: async (itemId, payload, token) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/partners/items/${itemId}/offer`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify(payload),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Error updating item offer:", error);
+      throw error;
+    }
+  },
+
   // Partner registration
   registerPartner: async (formData) => {
     try {

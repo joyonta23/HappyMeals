@@ -5,6 +5,20 @@ export const RestaurantCard = ({ restaurant, onSelectRestaurant }) => {
   const isFreeDelivery = restaurant.deliveryFee === 0;
   const isTopRated = restaurant.rating >= 4.5;
 
+  // Small indicators based on item-level offers
+  const items = Array.isArray(restaurant.items) ? restaurant.items : [];
+  const now = new Date();
+  const hasDeal = items.some((it) => {
+    const expiresAt = it?.offerExpires ? new Date(it.offerExpires) : null;
+    return (
+      Number(it?.discountPercent || 0) > 0 && (!expiresAt || expiresAt > now)
+    );
+  });
+  const hasItemFreeDelivery = items.some((it) => {
+    const expiresAt = it?.offerExpires ? new Date(it.offerExpires) : null;
+    return !!it?.freeDelivery && (!expiresAt || expiresAt > now);
+  });
+
   return (
     <div
       className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer restaurant-card"
@@ -58,9 +72,23 @@ export const RestaurantCard = ({ restaurant, onSelectRestaurant }) => {
         </h3>
 
         {/* Cuisine */}
-        <p className="text-gray-600 text-sm mb-4 truncate">
-          {restaurant.cuisine}
-        </p>
+        <p className="text-gray-600 text-sm truncate">{restaurant.cuisine}</p>
+
+        {/* Small offer indicators */}
+        {(hasDeal || hasItemFreeDelivery) && (
+          <div className="mt-2 mb-3 flex items-center gap-2">
+            {hasDeal && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 font-semibold">
+                Deals available
+              </span>
+            )}
+            {hasItemFreeDelivery && (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 font-semibold">
+                Free delivery items
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Info Grid */}
         <div className="flex items-center justify-between text-sm">

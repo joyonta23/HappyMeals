@@ -1,13 +1,39 @@
 import React, { useState } from "react";
 import { Search } from "lucide-react";
 import { useTranslation } from "../utils/translations";
+import { apiClient } from "../services/api";
 
-export const Hero = ({ onSearch, language }) => {
+export const Hero = ({ onSearch, language, restaurants = [], onSelectSuggestion }) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const t = useTranslation(language);
 
   const handleSearch = () => {
+    setShowSuggestions(false);
     onSearch(searchQuery);
+  };
+
+  // Debounced backend search
+  const debounceRef = React.useRef(null);
+  const updateSuggestions = (q) => {
+    const input = (q || "").trim();
+    if (!input || input.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await apiClient.search(input);
+        setSuggestions(res || []);
+        setShowSuggestions(Array.isArray(res) && res.length > 0);
+      } catch (err) {
+        console.error("Search error:", err);
+      }
+    }, 250);
   };
 
   return (
@@ -27,9 +53,40 @@ export const Hero = ({ onSearch, language }) => {
                 type="text"
                 placeholder={t("searchPlaceholder")}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setSearchQuery(v);
+                  updateSuggestions(v);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSearch();
+                }}
+                onFocus={() => updateSuggestions(searchQuery)}
                 className="w-full pl-10 pr-4 py-3 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-300"
               />
+              {showSuggestions && (
+                <div className="absolute left-0 right-0 mt-1 bg-white text-gray-800 rounded shadow z-50 max-h-64 overflow-auto">
+                  {suggestions.map((s, idx) => (
+                    <div
+                      key={`${s.name}-${idx}`}
+                      onClick={() => {
+                        setSearchQuery(s.name);
+                        setShowSuggestions(false);
+                        if (typeof onSelectSuggestion === "function") {
+                          // pass full suggestion object so parent can decide
+                          onSelectSuggestion(s);
+                        } else {
+                          onSearch(s.name);
+                        }
+                      }}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                    >
+                      <div className="font-medium">{s.name}</div>
+                      <div className="text-xs text-gray-500">{s.restaurant} • {s.cuisine}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <button
               onClick={handleSearch}
@@ -38,6 +95,7 @@ export const Hero = ({ onSearch, language }) => {
               Search
             </button>
           </div>
+          
         </div>
       </div>
     </div>

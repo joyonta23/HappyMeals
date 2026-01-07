@@ -52,6 +52,14 @@ const mockRestaurants = [
         image:
           "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=200&h=150&fit=crop",
       },
+      {
+        id: 104,
+        name: "Hyderabadi Biryani",
+        price: 400,
+        description: "Authentic Hyderabad style biryani",
+        image:
+          "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=200&h=150&fit=crop",
+      },
     ],
   },
   {
@@ -112,6 +120,7 @@ const mockRestaurants = [
         image:
           "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=200&h=150&fit=crop",
       },
+      // Hyderabadi Biryani moved to Deshi Dine mock to reflect data correction
     ],
   },
   {
@@ -141,6 +150,14 @@ const mockRestaurants = [
         description: "Crispy vegetable rolls",
         image:
           "https://images.unsplash.com/photo-1620704669558-7e3aa60bc6dc?w=200&h=150&fit=crop",
+      },
+      {
+        id: 403,
+        name: "Mutton Biryani",
+        price: 380,
+        description: "Slow-cooked mutton biryani",
+        image:
+          "https://images.unsplash.com/photo-1604908177522-5f9b1b5f3b1f?w=200&h=150&fit=crop",
       },
     ],
   },
@@ -231,6 +248,14 @@ const mockRestaurants = [
         description: "Spicy chicken with peanuts",
         image:
           "https://images.unsplash.com/photo-1582884921225-c36ebc5c9d2d?w=200&h=150&fit=crop",
+      },
+      {
+        id: 703,
+        name: "Beef Biryani",
+        price: 390,
+        description: "Delicious beef biryani with aromatic spices",
+        image:
+          "https://images.unsplash.com/photo-1604908177522-5f9b1b5f3b1f?w=200&h=150&fit=crop",
       },
     ],
   },
@@ -351,6 +376,7 @@ const getAnalyticsData = (partnerId) => ({
 const App = () => {
   const [currentPage, setCurrentPage] = useState("home");
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [highlightedItemId, setHighlightedItemId] = useState(null);
   const [cart, setCart] = useState([]);
   const [location, setLocation] = useState("Chattogram");
   const [loggedInPartner, setLoggedInPartner] = useState(null);
@@ -359,9 +385,21 @@ const App = () => {
   const [language, setLanguage] = useState("EN");
 
   const mergeWithMockItems = (apiRestaurant) => {
-    const fallback = mockRestaurants.find(
-      (m) => m.name.toLowerCase() === (apiRestaurant.name || "").toLowerCase()
+    const name = (apiRestaurant.name || "").toLowerCase();
+    let fallback = mockRestaurants.find(
+      (m) => (m.name || "").toLowerCase() === name
     );
+
+    // If exact name match not found, try matching by cuisine
+    if (!fallback && apiRestaurant.cuisine) {
+      const cuisine = (apiRestaurant.cuisine || "").toLowerCase();
+      fallback = mockRestaurants.find((m) =>
+        (m.cuisine || "").toLowerCase().includes(cuisine)
+      );
+    }
+
+    // Last resort: use first mock entry so we keep some items for corpus
+    if (!fallback) fallback = mockRestaurants[0];
 
     return {
       ...fallback,
@@ -394,8 +432,17 @@ const App = () => {
     loadRestaurants();
   }, []);
 
+  // Ensure Home list reflects latest offers/items after partner changes
+  React.useEffect(() => {
+    if (currentPage === "home") {
+      loadRestaurants();
+    }
+  }, [currentPage]);
+
   const handleRestaurantSelection = async (restaurant) => {
     const id = restaurant._id || restaurant.id;
+    const highlight =
+      restaurant._highlightItemId || restaurant.highlightedItemId || null;
     let enriched = restaurant;
 
     try {
@@ -410,6 +457,7 @@ const App = () => {
     }
 
     setSelectedRestaurant(enriched);
+    setHighlightedItemId(highlight);
     setCurrentPage("restaurant");
   };
 
@@ -456,8 +504,17 @@ const App = () => {
       (sum, item) => sum + item.price * item.quantity,
       0
     );
+    const now = new Date();
+    const hasActiveFreeDelivery = cart.some((item) => {
+      const expiresAt = item?.offerExpires ? new Date(item.offerExpires) : null;
+      return !!item?.freeDelivery && (!expiresAt || expiresAt > now);
+    });
     const deliveryFee =
-      cart.length > 0 ? selectedRestaurant?.deliveryFee || 30 : 0;
+      cart.length > 0
+        ? hasActiveFreeDelivery
+          ? 0
+          : selectedRestaurant?.deliveryFee || 30
+        : 0;
     return { subtotal, deliveryFee, total: subtotal + deliveryFee };
   };
 
@@ -513,6 +570,7 @@ const App = () => {
         <RestaurantPage
           restaurant={selectedRestaurant}
           setCurrentPage={setCurrentPage}
+          highlightedItemId={highlightedItemId}
           onAddToCart={addToCart}
         />
       )}

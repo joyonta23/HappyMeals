@@ -26,6 +26,14 @@ export const CheckoutPage = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  const hasActiveFreeDelivery = React.useMemo(() => {
+    const now = new Date();
+    return cart.some((item) => {
+      const expiresAt = item?.offerExpires ? new Date(item.offerExpires) : null;
+      return !!item?.freeDelivery && (!expiresAt || expiresAt > now);
+    });
+  }, [cart]);
+
   const getTotalPrice = () => {
     const subtotal = cart.reduce(
       (sum, item) => sum + item.price * item.quantity,
@@ -33,7 +41,9 @@ export const CheckoutPage = ({
     );
     const deliveryFee =
       cart.length > 0 && serviceType === "delivery"
-        ? selectedRestaurant?.deliveryFee || 30
+        ? hasActiveFreeDelivery
+          ? 0
+          : selectedRestaurant?.deliveryFee || 30
         : 0;
     return { subtotal, deliveryFee, total: subtotal + deliveryFee };
   };
@@ -63,6 +73,8 @@ export const CheckoutPage = ({
         name: item.name,
         price: item.price,
         quantity: item.quantity,
+        freeDelivery: !!item.freeDelivery,
+        offerExpires: item.offerExpires || null,
       })),
       totals: { subtotal, deliveryFee, total },
       address:
@@ -265,7 +277,7 @@ export const CheckoutPage = ({
                     </p>
                   </div>
                   <span className="ml-auto font-semibold text-orange-600">
-                    +৳{deliveryFee}
+                    {hasActiveFreeDelivery ? "Free (offer)" : `+৳${deliveryFee}`}
                   </span>
                 </label>
                 <label

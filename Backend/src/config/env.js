@@ -1,6 +1,7 @@
 const dotenv = require("dotenv");
 
-dotenv.config();
+// Ensure local .env overrides any pre-set environment vars in dev
+dotenv.config({ override: true });
 
 const config = {
   port: process.env.PORT || 5000,

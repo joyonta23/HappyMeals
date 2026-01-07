@@ -1,5 +1,5 @@
 const express = require("express");
-const { body } = require("express-validator");
+const { body, param } = require("express-validator");
 const multer = require("multer");
 const path = require("path");
 const {
@@ -78,6 +78,25 @@ router.post(
     body("preparationTime").optional().isLength({ max: 50 }),
   ],
   addMenuItem
+);
+
+// Update offer fields for a menu item (partner-only)
+router.put(
+  "/items/:id/offer",
+  requireAuth("partner"),
+  [
+    param("id").isMongoId().withMessage("Invalid menu item id"),
+    body("discountPercent")
+      .optional()
+      .isFloat({ min: 0, max: 100 })
+      .withMessage("discountPercent must be between 0 and 100"),
+    body("freeDelivery")
+      .optional()
+      .isBoolean()
+      .withMessage("freeDelivery must be boolean"),
+    body("offerExpires").optional().isISO8601().toDate(),
+  ],
+  require("../controllers/partnerController").setItemOffer
 );
 
 module.exports = router;

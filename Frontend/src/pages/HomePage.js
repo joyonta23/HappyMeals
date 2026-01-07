@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Package, ShoppingBag, User, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Hero } from "../components/Hero";
 import { RestaurantCard } from "../components/RestaurantCard";
+import PopularDishes from "../components/PopularDishes";
 
 export const HomePage = ({
   restaurants = [],
@@ -20,7 +21,12 @@ export const HomePage = ({
     rating4Plus: false,
   });
   const [showSignUpBanner, setShowSignUpBanner] = useState(true);
-  const [activeTab, setActiveTab] = useState("delivery");
+  const isLoggedIn = !!(
+    localStorage.getItem("authToken") ||
+    localStorage.getItem("partnerToken") ||
+    localStorage.getItem("user")
+  );
+
 
   const cuisines = [
     {
@@ -63,11 +69,32 @@ export const HomePage = ({
   const getFilteredRestaurants = () => {
     let filtered = [...restaurants];
 
+    const now = new Date();
+
     if (filters.rating4Plus) {
       filtered = filtered.filter((r) => r.rating >= 4.4);
     }
+
     if (filters.freeDelivery) {
-      filtered = filtered.filter((r) => r.deliveryFee === 0);
+      filtered = filtered.filter((r) => {
+        // Check restaurant-level free delivery OR any item with active free-delivery offer
+        if (r.deliveryFee === 0) return true;
+        const items = Array.isArray(r.items) ? r.items : [];
+        return items.some((it) => {
+          const expiresAt = it?.offerExpires ? new Date(it.offerExpires) : null;
+          return !!it?.freeDelivery && (!expiresAt || expiresAt > now);
+        });
+      });
+    }
+
+    if (filters.deals) {
+      filtered = filtered.filter((r) => {
+        const items = Array.isArray(r.items) ? r.items : [];
+        return items.some((it) => {
+          const expiresAt = it?.offerExpires ? new Date(it.offerExpires) : null;
+          return Number(it?.discountPercent || 0) > 0 && (!expiresAt || expiresAt > now);
+        });
+      });
     }
 
     if (sortBy === "fastest") {
@@ -95,52 +122,38 @@ export const HomePage = ({
       <Hero
         onSearch={(query) => console.log("Search:", query)}
         language={language}
+        restaurants={restaurants}
+        onSelectSuggestion={(arg1, arg2) => {
+          // Support both (restaurantId, itemId) and suggestion object
+          let restaurantId = null;
+          let itemId = null;
+          if (arg1 && typeof arg1 === "object" && arg1.restaurantId) {
+            restaurantId = arg1.restaurantId;
+            itemId = arg1.itemId;
+            console.debug("Hero suggestion clicked:", arg1);
+          } else {
+            restaurantId = arg1;
+            itemId = arg2;
+          }
+
+          if (typeof onSelectRestaurant === "function") {
+            const found = restaurants.find(
+              (r) => (r._id && String(r._id) === String(restaurantId)) || (r.id && String(r.id) === String(restaurantId))
+            );
+            const payload = found
+              ? { ...found, _highlightItemId: itemId }
+              : { _id: restaurantId, id: restaurantId, _highlightItemId: itemId };
+            onSelectRestaurant(payload);
+          } else {
+            console.log("Suggestion selected", restaurantId, itemId);
+          }
+        }}
       />
 
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b sticky top-16 z-40">
-        <div className="container mx-auto px-4">
-          <div className="flex gap-8">
-            <button
-              onClick={() => setActiveTab("delivery")}
-              className={`flex items-center gap-2 py-4 px-2 border-b-2 font-medium transition ${
-                activeTab === "delivery"
-                  ? "border-orange-600 text-orange-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              <Package size={20} />
-              <span>Delivery</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("pickup")}
-              className={`flex items-center gap-2 py-4 px-2 border-b-2 font-medium transition ${
-                activeTab === "pickup"
-                  ? "border-orange-600 text-orange-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              <User size={20} />
-              <span>Pick-up</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("shops")}
-              className={`flex items-center gap-2 py-4 px-2 border-b-2 font-medium transition ${
-                activeTab === "shops"
-                  ? "border-orange-600 text-orange-600"
-                  : "border-transparent text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              <Package size={20} />
-              <span>Shops</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Navigation Tabs removed: Delivery / Pick-up / Shops */}
 
       {/* Sign Up Banner */}
-      {showSignUpBanner && (
+      {showSignUpBanner && !isLoggedIn && (
         <div className="bg-orange-50 border-b border-orange-100">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between bg-white rounded-lg shadow-sm p-6">
@@ -156,7 +169,11 @@ export const HomePage = ({
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <button className="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage && setCurrentPage("customer-signup")}
+                  className="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition"
+                >
                   Sign up
                 </button>
                 <button
@@ -195,6 +212,9 @@ export const HomePage = ({
             ))}
           </div>
         </div>
+
+          {/* Popular dishes */}
+          <PopularDishes onAddToCart={onAddToCart} />
       </div>
 
       <div className="container mx-auto px-4 py-8">

@@ -2,7 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Star, Clock, ShoppingBag } from "lucide-react";
 import { apiClient } from "../services/api";
 
-export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
+export const RestaurantPage = ({
+  restaurant,
+  setCurrentPage,
+  onAddToCart,
+  highlightedItemId,
+}) => {
   const [reviews, setReviews] = useState([]);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -12,7 +17,12 @@ export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
   const [reviewSuccess, setReviewSuccess] = useState("");
 
   const restaurantId = restaurant?.id || restaurant?._id;
-  const avgRating = restaurant?.averageRating || restaurant?.rating;
+  const avgRating =
+    reviews.length > 0
+      ? (
+          reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length
+        ).toFixed(1)
+      : restaurant?.averageRating || restaurant?.rating || "New";
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -28,8 +38,27 @@ export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
       fetchReviews();
     }
   }, [restaurantId]);
+  // Ensure highlight effect runs on every render hook order consistently
+  useEffect(() => {
+    if (!highlightedItemId) return;
+    const el = document.getElementById(`menu-item-${highlightedItemId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      // temporary highlight
+      el.classList.add("ring", "ring-orange-300");
+      setTimeout(() => el.classList.remove("ring", "ring-orange-300"), 3000);
+    }
+  }, [highlightedItemId]);
 
   if (!restaurant) return null;
+
+  // Show a header hint if any item currently has active free delivery
+  const anyFreeDeliveryActive =
+    Array.isArray(restaurant.items) &&
+    restaurant.items.some((it) => {
+      const expiresAt = it?.offerExpires ? new Date(it.offerExpires) : null;
+      return !!it?.freeDelivery && (!expiresAt || expiresAt > new Date());
+    });
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
@@ -99,6 +128,11 @@ export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
                 <div className="text-gray-600">
                   ৳{restaurant.deliveryFee} delivery
                 </div>
+                {anyFreeDeliveryActive && (
+                  <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full font-semibold">
+                    Free delivery available
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -111,10 +145,34 @@ export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
           {restaurant.items &&
             restaurant.items.map((item) => {
               const itemId = item.id || item._id;
+              const isHighlighted =
+                highlightedItemId &&
+                String(highlightedItemId) === String(itemId);
+              const now = new Date();
+              const expiresAt = item.offerExpires
+                ? new Date(item.offerExpires)
+                : null;
+              const offerValid =
+                Number(item.discountPercent || 0) > 0 &&
+                (!expiresAt || expiresAt > now);
+              const freeDeliveryActive =
+                !!item.freeDelivery && (!expiresAt || expiresAt > now);
+              const effectivePrice = offerValid
+                ? Math.round(
+                    Number(item.price || 0) *
+                      (1 - Number(item.discountPercent || 0) / 100)
+                  )
+                : Number(item.price || 0);
+              const expiryDisplay = expiresAt
+                ? expiresAt.toISOString().slice(0, 10)
+                : "";
               return (
                 <div
+                  id={`menu-item-${itemId}`}
                   key={itemId}
-                  className="bg-white rounded-lg shadow-md p-4 flex gap-4"
+                  className={`bg-white rounded-lg shadow-md p-4 flex gap-4 ${
+                    isHighlighted ? "ring ring-orange-300" : ""
+                  }`}
                 >
                   {item.image ? (
                     <img
@@ -135,9 +193,31 @@ export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
                     </p>
                     <div className="flex items-center justify-between">
                       <span className="text-lg font-bold text-orange-600">
-                        ৳{item.price}
+                        {offerValid ? (
+                          <>
+                            <span className="text-base line-through text-gray-400 mr-2">
+                              ৳{item.price}
+                            </span>
+                            <span>৳{effectivePrice}</span>
+                          </>
+                        ) : (
+                          <>৳{item.price}</>
+                        )}
                       </span>
                       <div className="flex items-center gap-2">
+                        {offerValid && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-orange-50 text-orange-700 font-semibold">
+                            {Number(item.discountPercent)}% OFF
+                            {expiryDisplay ? ` · until ${expiryDisplay}` : ""}
+                          </span>
+                        )}
+                        {freeDeliveryActive && (
+                          <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full font-semibold">
+                            Free delivery
+                            {expiryDisplay ? ` · until ${expiryDisplay}` : ""}
+                          </span>
+                        )}
+
                         {item.reviewCount > 0 && (
                           <span className="flex items-center gap-1 text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
                             <Star
@@ -153,7 +233,13 @@ export const RestaurantPage = ({ restaurant, setCurrentPage, onAddToCart }) => {
                           </span>
                         )}
                         <button
-                          onClick={() => onAddToCart(item, restaurantId)}
+                          onClick={() => {
+                            const itemForCart = {
+                              ...item,
+                              price: effectivePrice,
+                            };
+                            onAddToCart(itemForCart, restaurantId);
+                          }}
                           className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition"
                         >
                           Add to Cart

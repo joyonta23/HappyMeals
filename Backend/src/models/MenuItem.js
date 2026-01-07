@@ -7,6 +7,10 @@ const menuItemSchema = new mongoose.Schema(
     price: { type: Number, required: true },
     description: { type: String },
     image: { type: String },
+    // Offer fields
+    discountPercent: { type: Number, default: 0 },
+    freeDelivery: { type: Boolean, default: false },
+    offerExpires: { type: Date },
     available: { type: Boolean, default: true },
     preparationTime: { type: String },
   },

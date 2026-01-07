@@ -195,6 +195,10 @@ const addMenuItem = async (req, res, next) => {
       description,
       image,
       available: available === "false" ? false : Boolean(available),
+      // accept offer fields if provided when creating
+      discountPercent: req.body.discountPercent ? Number(req.body.discountPercent) : 0,
+      freeDelivery: req.body.freeDelivery === "true" || req.body.freeDelivery === true ? true : false,
+      offerExpires: req.body.offerExpires ? new Date(req.body.offerExpires) : undefined,
       preparationTime,
     });
 
@@ -206,4 +210,41 @@ const addMenuItem = async (req, res, next) => {
   }
 };
 
-module.exports = { registerPartner, changePassword, addMenuItem };
+// Partner sets offer fields for an existing menu item
+const setItemOffer = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+
+    const partnerId = req.user?.partnerId;
+    if (!partnerId) return res.status(401).json({ message: "Unauthorized" });
+
+    const partner = await Partner.findOne({ partnerId }).populate("restaurant");
+    if (!partner || !partner.restaurant) return res.status(404).json({ message: "Partner or restaurant not found" });
+
+    const itemId = req.params.id;
+    const item = await MenuItem.findById(itemId);
+    if (!item) return res.status(404).json({ message: "Menu item not found" });
+
+    // Ensure partner owns the restaurant for this item
+    if (String(item.restaurant) !== String(partner.restaurant.id)) {
+      return res.status(403).json({ message: "You do not have permission to modify this item" });
+    }
+
+    const updates = {};
+    if (typeof req.body.discountPercent !== "undefined") updates.discountPercent = Number(req.body.discountPercent) || 0;
+    if (typeof req.body.freeDelivery !== "undefined") updates.freeDelivery = req.body.freeDelivery === true || req.body.freeDelivery === "true";
+    if (typeof req.body.offerExpires !== "undefined") {
+      updates.offerExpires = req.body.offerExpires ? new Date(req.body.offerExpires) : null;
+    }
+
+    Object.assign(item, updates);
+    await item.save();
+
+    res.json({ message: "Offer updated", item });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { registerPartner, changePassword, addMenuItem, setItemOffer };
