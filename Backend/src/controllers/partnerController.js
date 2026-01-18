@@ -164,6 +164,13 @@ const addMenuItem = async (req, res, next) => {
       preparationTime,
       available = true,
       imageUrl,
+      // Chatbot fields
+      category,
+      dietary,
+      spiceLevel,
+      allergens,
+      isSide,
+      popularityScore,
     } = req.body;
 
     // Prefer uploaded file, fall back to provided URL
@@ -178,6 +185,26 @@ const addMenuItem = async (req, res, next) => {
       console.log("No image provided");
     }
 
+    // Parse dietary and allergens from JSON strings if necessary
+    let parsedDietary = dietary;
+    let parsedAllergens = allergens;
+
+    if (typeof dietary === "string") {
+      try {
+        parsedDietary = JSON.parse(dietary);
+      } catch (e) {
+        parsedDietary = dietary ? [dietary] : ["non-vegetarian"];
+      }
+    }
+
+    if (typeof allergens === "string") {
+      try {
+        parsedAllergens = JSON.parse(allergens);
+      } catch (e) {
+        parsedAllergens = allergens ? [allergens] : [];
+      }
+    }
+
     console.log("Creating menu item with:", {
       restaurant: partner.restaurant.id,
       name,
@@ -186,6 +213,13 @@ const addMenuItem = async (req, res, next) => {
       image,
       available,
       preparationTime,
+      // Chatbot fields
+      category: category || "other",
+      dietary: parsedDietary || ["non-vegetarian"],
+      spiceLevel: spiceLevel || "medium",
+      allergens: parsedAllergens || [],
+      isSide: isSide || false,
+      popularityScore: popularityScore || 50,
     });
 
     const item = await MenuItem.create({
@@ -196,10 +230,24 @@ const addMenuItem = async (req, res, next) => {
       image,
       available: available === "false" ? false : Boolean(available),
       // accept offer fields if provided when creating
-      discountPercent: req.body.discountPercent ? Number(req.body.discountPercent) : 0,
-      freeDelivery: req.body.freeDelivery === "true" || req.body.freeDelivery === true ? true : false,
-      offerExpires: req.body.offerExpires ? new Date(req.body.offerExpires) : undefined,
+      discountPercent: req.body.discountPercent
+        ? Number(req.body.discountPercent)
+        : 0,
+      freeDelivery:
+        req.body.freeDelivery === "true" || req.body.freeDelivery === true
+          ? true
+          : false,
+      offerExpires: req.body.offerExpires
+        ? new Date(req.body.offerExpires)
+        : undefined,
       preparationTime,
+      // Chatbot fields
+      category: category || "other",
+      dietary: parsedDietary || ["non-vegetarian"],
+      spiceLevel: spiceLevel || "medium",
+      allergens: parsedAllergens || [],
+      isSide: isSide || false,
+      popularityScore: parseInt(popularityScore) || 50,
     });
 
     console.log("Menu item created successfully:", item._id);
@@ -214,13 +262,17 @@ const addMenuItem = async (req, res, next) => {
 const setItemOffer = async (req, res, next) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    if (!errors.isEmpty())
+      return res.status(400).json({ errors: errors.array() });
 
     const partnerId = req.user?.partnerId;
     if (!partnerId) return res.status(401).json({ message: "Unauthorized" });
 
     const partner = await Partner.findOne({ partnerId }).populate("restaurant");
-    if (!partner || !partner.restaurant) return res.status(404).json({ message: "Partner or restaurant not found" });
+    if (!partner || !partner.restaurant)
+      return res
+        .status(404)
+        .json({ message: "Partner or restaurant not found" });
 
     const itemId = req.params.id;
     const item = await MenuItem.findById(itemId);
@@ -228,14 +280,21 @@ const setItemOffer = async (req, res, next) => {
 
     // Ensure partner owns the restaurant for this item
     if (String(item.restaurant) !== String(partner.restaurant.id)) {
-      return res.status(403).json({ message: "You do not have permission to modify this item" });
+      return res
+        .status(403)
+        .json({ message: "You do not have permission to modify this item" });
     }
 
     const updates = {};
-    if (typeof req.body.discountPercent !== "undefined") updates.discountPercent = Number(req.body.discountPercent) || 0;
-    if (typeof req.body.freeDelivery !== "undefined") updates.freeDelivery = req.body.freeDelivery === true || req.body.freeDelivery === "true";
+    if (typeof req.body.discountPercent !== "undefined")
+      updates.discountPercent = Number(req.body.discountPercent) || 0;
+    if (typeof req.body.freeDelivery !== "undefined")
+      updates.freeDelivery =
+        req.body.freeDelivery === true || req.body.freeDelivery === "true";
     if (typeof req.body.offerExpires !== "undefined") {
-      updates.offerExpires = req.body.offerExpires ? new Date(req.body.offerExpires) : null;
+      updates.offerExpires = req.body.offerExpires
+        ? new Date(req.body.offerExpires)
+        : null;
     }
 
     Object.assign(item, updates);
@@ -247,4 +306,144 @@ const setItemOffer = async (req, res, next) => {
   }
 };
 
-module.exports = { registerPartner, changePassword, addMenuItem, setItemOffer };
+// Partner updates restaurant image
+const updateRestaurantImage = async (req, res, next) => {
+  try {
+    const partnerId = req.user?.partnerId;
+    if (!partnerId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const partner = await Partner.findOne({ partnerId }).populate("restaurant");
+    if (!partner || !partner.restaurant) {
+      return res
+        .status(404)
+        .json({ message: "Partner or restaurant not found" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No image file provided" });
+    }
+
+    const basePath = `${req.protocol}://${req.get("host")}`;
+    const imageUrl = `${basePath}/uploads/${req.file.filename}`;
+
+    partner.restaurant.image = imageUrl;
+    await partner.restaurant.save();
+
+    console.log("Restaurant image updated:", imageUrl);
+    res.json({
+      message: "Restaurant image updated successfully",
+      image: imageUrl,
+    });
+  } catch (err) {
+    console.error("Error updating restaurant image:", err);
+    next(err);
+  }
+};
+
+// Partner updates menu item with chatbot fields
+const updateMenuItem = async (req, res, next) => {
+  try {
+    const partnerId = req.user?.partnerId;
+    if (!partnerId) return res.status(401).json({ message: "Unauthorized" });
+
+    const partner = await Partner.findOne({ partnerId }).populate("restaurant");
+    if (!partner || !partner.restaurant)
+      return res
+        .status(404)
+        .json({ message: "Partner or restaurant not found" });
+
+    const itemId = req.params.id;
+    const item = await MenuItem.findById(itemId);
+    if (!item) return res.status(404).json({ message: "Menu item not found" });
+
+    // Ensure partner owns the restaurant for this item
+    if (String(item.restaurant) !== String(partner.restaurant.id)) {
+      return res
+        .status(403)
+        .json({ message: "You do not have permission to modify this item" });
+    }
+
+    const {
+      name,
+      price,
+      description,
+      preparationTime,
+      available,
+      imageUrl,
+      // Chatbot fields
+      category,
+      dietary,
+      spiceLevel,
+      allergens,
+      isSide,
+      popularityScore,
+    } = req.body;
+
+    // Update basic fields
+    if (name !== undefined) item.name = name;
+    if (price !== undefined) item.price = price;
+    if (description !== undefined) item.description = description;
+    if (preparationTime !== undefined) item.preparationTime = preparationTime;
+    if (available !== undefined)
+      item.available = available === "false" ? false : Boolean(available);
+
+    // Handle image update
+    if (req.file) {
+      const basePath = `${req.protocol}://${req.get("host")}`;
+      item.image = `${basePath}/uploads/${req.file.filename}`;
+    } else if (imageUrl !== undefined && imageUrl !== null) {
+      item.image = imageUrl;
+    }
+
+    // Update chatbot fields
+    if (category !== undefined) item.category = category;
+
+    if (dietary !== undefined) {
+      if (typeof dietary === "string") {
+        try {
+          item.dietary = JSON.parse(dietary);
+        } catch (e) {
+          item.dietary = dietary ? [dietary] : item.dietary;
+        }
+      } else if (Array.isArray(dietary)) {
+        item.dietary = dietary;
+      }
+    }
+
+    if (spiceLevel !== undefined) item.spiceLevel = spiceLevel;
+
+    if (allergens !== undefined) {
+      if (typeof allergens === "string") {
+        try {
+          item.allergens = JSON.parse(allergens);
+        } catch (e) {
+          item.allergens = allergens ? [allergens] : item.allergens;
+        }
+      } else if (Array.isArray(allergens)) {
+        item.allergens = allergens;
+      }
+    }
+
+    if (isSide !== undefined)
+      item.isSide = isSide === "true" || isSide === true;
+    if (popularityScore !== undefined)
+      item.popularityScore = parseInt(popularityScore) || 0;
+
+    await item.save();
+
+    res.json({ message: "Menu item updated successfully", item });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = {
+  registerPartner,
+  changePassword,
+  addMenuItem,
+  setItemOffer,
+  updateRestaurantImage,
+  updateMenuItem,
+};

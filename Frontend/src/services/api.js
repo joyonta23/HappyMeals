@@ -164,9 +164,9 @@ export const apiClient = {
   // Search items via backend text search
   search: async (q) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/restaurants/search?q=${encodeURIComponent(
-        q
-      )}`);
+      const response = await fetch(
+        `${API_BASE_URL}/restaurants/search?q=${encodeURIComponent(q)}`
+      );
       return await response.json();
     } catch (error) {
       console.error("Error searching:", error);
@@ -176,11 +176,17 @@ export const apiClient = {
   // Partner: update item offers
   updateItemOffer: async (itemId, payload, token) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/partners/items/${itemId}/offer`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        `${API_BASE_URL}/partners/items/${itemId}/offer`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(payload),
+        }
+      );
       return await response.json();
     } catch (error) {
       console.error("Error updating item offer:", error);
@@ -256,6 +262,128 @@ export const apiClient = {
       return await response.json();
     } catch (error) {
       console.error("Error updating order status:", error);
+      throw error;
+    }
+  },
+
+  // Update restaurant image (partner)
+  updateRestaurantImage: async (formData, token) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/partners/restaurant/image`,
+        {
+          method: "PUT",
+          headers: { ...withAuth(token) },
+          body: formData,
+        }
+      );
+      return await response.json();
+    } catch (error) {
+      console.error("Error updating restaurant image:", error);
+      throw error;
+    }
+  },
+
+  // Customer forgot password
+  customerForgotPassword: async (email) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/customer-forgot-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
+      return await response.json();
+    } catch (error) {
+      console.error("Error requesting password reset:", error);
+      throw error;
+    }
+  },
+
+  // Customer reset password
+  customerResetPassword: async (token, newPassword) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/customer-reset-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, newPassword }),
+        }
+      );
+      return await response.json();
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      throw error;
+    }
+  },
+
+  // Partner forgot password
+  partnerForgotPassword: async (email) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/partner-forgot-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
+      return await response.json();
+    } catch (error) {
+      console.error("Error requesting password reset:", error);
+      throw error;
+    }
+  },
+
+  // Partner reset password
+  partnerResetPassword: async (token, newPassword) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/partner-reset-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, newPassword }),
+        }
+      );
+      return await response.json();
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      throw error;
+    }
+  },
+
+  // Chatbot endpoints
+  generateCombo: async (priceRange, preferences, restaurantId = null) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/chatbot/generate-combo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          priceRange,
+          preferences,
+          ...(restaurantId && { restaurantId }),
+        }),
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Error generating combo:", error);
+      throw error;
+    }
+  },
+
+  getChatbotPreferences: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/chatbot/preferences`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      return await response.json();
+    } catch (error) {
+      console.error("Error fetching chatbot preferences:", error);
       throw error;
     }
   },

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Lock, ArrowLeft, Copy, Check } from "lucide-react";
+import { Lock, ArrowLeft, Copy, Check, Upload } from "lucide-react";
 import { apiClient } from "../services/api";
 
 export const PartnerSettingsPage = ({ setCurrentPage, partnerData }) => {
@@ -15,6 +15,14 @@ export const PartnerSettingsPage = ({ setCurrentPage, partnerData }) => {
     error: null,
   });
 
+  const [imageStatus, setImageStatus] = useState({
+    loading: false,
+    success: null,
+    error: null,
+  });
+
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [copied, setCopied] = useState(false);
 
   const handleCopyPartnerId = () => {
@@ -29,6 +37,78 @@ export const PartnerSettingsPage = ({ setCurrentPage, partnerData }) => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        setImageStatus({
+          loading: false,
+          success: null,
+          error: "Image must be less than 2MB",
+        });
+        return;
+      }
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setImageStatus({ loading: false, success: null, error: null });
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!selectedImage) {
+      setImageStatus({
+        loading: false,
+        success: null,
+        error: "Please select an image first",
+      });
+      return;
+    }
+
+    setImageStatus({ loading: true, success: null, error: null });
+
+    try {
+      const token = localStorage.getItem("partnerToken");
+      const formData = new FormData();
+      formData.append("image", selectedImage);
+
+      const response = await apiClient.updateRestaurantImage(formData, token);
+
+      if (response?.message && response?.image) {
+        setImageStatus({
+          loading: false,
+          success: "Restaurant image updated successfully!",
+          error: null,
+        });
+        // Update partnerData if needed
+        if (partnerData?.restaurant) {
+          partnerData.restaurant.image = response.image;
+        }
+        // Clear selection after successful upload
+        setTimeout(() => {
+          setSelectedImage(null);
+          setImagePreview(null);
+        }, 2000);
+      } else {
+        setImageStatus({
+          loading: false,
+          success: null,
+          error: response?.message || "Failed to update image",
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setImageStatus({
+        loading: false,
+        success: null,
+        error: "Error uploading image. Please try again.",
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -160,6 +240,77 @@ export const PartnerSettingsPage = ({ setCurrentPage, partnerData }) => {
                   {partnerData?.restaurant?.name ||
                     partnerData?.restaurantName ||
                     "Not available"}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-2">
+                  Restaurant Image
+                </label>
+                <div className="space-y-3">
+                  {/* Current Image */}
+                  {partnerData?.restaurant?.image && (
+                    <div className="bg-white border border-gray-300 rounded-lg p-3">
+                      <img
+                        src={partnerData.restaurant.image}
+                        alt="Restaurant"
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Image Preview */}
+                  {imagePreview && (
+                    <div className="bg-white border border-orange-300 rounded-lg p-3">
+                      <p className="text-sm text-gray-600 mb-2">New Image Preview:</p>
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+
+                  {/* Upload Controls */}
+                  <div className="flex items-center gap-2">
+                    <label className="flex-1 cursor-pointer">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition border border-gray-300">
+                        <Upload size={18} />
+                        <span className="text-sm">
+                          {selectedImage ? selectedImage.name : "Choose Image"}
+                        </span>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                      />
+                    </label>
+                    {selectedImage && (
+                      <button
+                        onClick={handleImageUpload}
+                        disabled={imageStatus.loading}
+                        className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {imageStatus.loading ? "Uploading..." : "Upload"}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Image Status Messages */}
+                  {imageStatus.success && (
+                    <div className="text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg p-2">
+                      {imageStatus.success}
+                    </div>
+                  )}
+                  {imageStatus.error && (
+                    <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-2">
+                      {imageStatus.error}
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    Maximum file size: 2MB. Supported formats: JPG, PNG, GIF
+                  </p>
                 </div>
               </div>
             </div>

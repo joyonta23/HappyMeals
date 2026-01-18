@@ -228,6 +228,12 @@ export const PartnerDashboard = ({
     image: "",
     available: true,
     preparationTime: "",
+    // Chatbot fields
+    dietary: "non-vegetarian",
+    spiceLevel: "medium",
+    allergens: [],
+    isSide: false,
+    popularityScore: 50,
   });
 
   const categories = [
@@ -372,6 +378,7 @@ export const PartnerDashboard = ({
       try {
         const fd = new FormData();
         fd.append("name", formData.name);
+        fd.append("category", formData.category);
         fd.append("price", String(formData.price));
         if (formData.description)
           fd.append("description", formData.description);
@@ -379,6 +386,13 @@ export const PartnerDashboard = ({
           fd.append("preparationTime", formData.preparationTime);
         fd.append("available", formData.available ? "true" : "false");
         if (formData.image) fd.append("imageUrl", formData.image);
+
+        // Add chatbot fields
+        fd.append("dietary", formData.dietary);
+        fd.append("spiceLevel", formData.spiceLevel);
+        fd.append("allergens", JSON.stringify(formData.allergens));
+        fd.append("isSide", String(formData.isSide));
+        fd.append("popularityScore", String(formData.popularityScore));
 
         const res = await apiClient.addMenuItem(fd, token);
         if (res?.item) {
@@ -394,6 +408,12 @@ export const PartnerDashboard = ({
             image: "",
             available: true,
             preparationTime: "",
+            // Chatbot fields
+            dietary: "non-vegetarian",
+            spiceLevel: "medium",
+            allergens: [],
+            isSide: false,
+            popularityScore: 50,
           });
           alert("Menu item saved");
         } else if (res?.errors) {
@@ -431,8 +451,10 @@ export const PartnerDashboard = ({
     if (searchQuery) {
       filtered = filtered.filter(
         (item) =>
-          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.description.toLowerCase().includes(searchQuery.toLowerCase())
+          (item.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (item.description || "")
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
       );
     }
 
@@ -992,7 +1014,7 @@ export const PartnerDashboard = ({
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {incomingOrders.map((order, idx) => (
                     <div
-                      key={idx}
+                      key={order.id || `order-${idx}`}
                       className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow border-l-4 border-orange-600 p-6"
                     >
                       {/* Order Header */}
@@ -1088,7 +1110,7 @@ export const PartnerDashboard = ({
                         <div className="space-y-2">
                           {order.items.map((item, itemIdx) => (
                             <div
-                              key={itemIdx}
+                              key={`${order.id}-item-${itemIdx}`}
                               className="flex items-center justify-between text-sm"
                             >
                               <span className="text-gray-800">
@@ -1246,7 +1268,7 @@ export const PartnerDashboard = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {getFilteredMenuItems().map((item) => (
                 <div
-                  key={item.id}
+                  key={item._id || item.id || `item-${Math.random()}`}
                   className="bg-white rounded-2xl shadow-md overflow-hidden hover-lift transition"
                 >
                   {/* Item Image */}
@@ -1315,6 +1337,36 @@ export const PartnerDashboard = ({
                           {new Date(item.offerExpires)
                             .toISOString()
                             .slice(0, 10)}
+                        </span>
+                      )}
+                      {/* Chatbot badges */}
+                      {item.dietary && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-purple-50 text-purple-700 font-semibold">
+                          {(() => {
+                            const dietary = Array.isArray(item.dietary)
+                              ? item.dietary[0]
+                              : item.dietary;
+                            return dietary === "non-vegetarian"
+                              ? "🍖"
+                              : dietary === "vegetarian"
+                                ? "🥗"
+                                : dietary === "vegan"
+                                  ? "🌱"
+                                  : "🐟";
+                          })()}{" "}
+                          {Array.isArray(item.dietary)
+                            ? item.dietary[0]
+                            : item.dietary}
+                        </span>
+                      )}
+                      {item.spiceLevel && item.spiceLevel !== "medium" && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-red-50 text-red-700 font-semibold">
+                          🌶️ {item.spiceLevel}
+                        </span>
+                      )}
+                      {item.isSide && (
+                        <span className="text-xs px-2 py-1 rounded-full bg-yellow-50 text-yellow-700 font-semibold">
+                          Side dish
                         </span>
                       )}
                     </div>
@@ -1646,6 +1698,135 @@ export const PartnerDashboard = ({
                     Item is available for order
                   </span>
                 </label>
+              </div>
+
+              {/* Chatbot Fields Section */}
+              <div className="border-t pt-4 mt-4">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">
+                  🤖 Chatbot Information
+                </h3>
+
+                {/* Dietary */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Dietary Type
+                  </label>
+                  <select
+                    value={formData.dietary || "non-vegetarian"}
+                    onChange={(e) =>
+                      setFormData({ ...formData, dietary: e.target.value })
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  >
+                    <option value="vegetarian">Vegetarian</option>
+                    <option value="non-vegetarian">Non-Vegetarian</option>
+                    <option value="vegan">Vegan</option>
+                    <option value="pescatarian">Pescatarian</option>
+                  </select>
+                </div>
+
+                {/* Spice Level */}
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Spice Level
+                  </label>
+                  <select
+                    value={formData.spiceLevel || "medium"}
+                    onChange={(e) =>
+                      setFormData({ ...formData, spiceLevel: e.target.value })
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  >
+                    <option value="mild">Mild</option>
+                    <option value="medium">Medium</option>
+                    <option value="hot">Hot</option>
+                    <option value="extra-hot">Extra Hot</option>
+                  </select>
+                </div>
+
+                {/* Allergens */}
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Allergens
+                  </label>
+                  <div className="space-y-2">
+                    {[
+                      "Peanuts",
+                      "Tree Nuts",
+                      "Dairy",
+                      "Eggs",
+                      "Soy",
+                      "Wheat",
+                      "Sesame",
+                      "Fish",
+                    ].map((allergen) => (
+                      <label key={allergen} className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={(formData.allergens || []).includes(
+                            allergen
+                          )}
+                          onChange={(e) => {
+                            const currentAllergens = formData.allergens || [];
+                            const newAllergens = e.target.checked
+                              ? [...currentAllergens, allergen]
+                              : currentAllergens.filter((a) => a !== allergen);
+                            setFormData({
+                              ...formData,
+                              allergens: newAllergens,
+                            });
+                          }}
+                          className="w-4 h-4 text-orange-600 rounded focus:ring-2 focus:ring-orange-300"
+                        />
+                        <span className="text-gray-700 text-sm">
+                          {allergen}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Is Side */}
+                <div className="mt-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isSide || false}
+                      onChange={(e) =>
+                        setFormData({ ...formData, isSide: e.target.checked })
+                      }
+                      className="w-5 h-5 text-orange-600 rounded focus:ring-2 focus:ring-orange-300"
+                    />
+                    <span className="font-semibold text-gray-700">
+                      This is a side dish
+                    </span>
+                  </label>
+                </div>
+
+                {/* Popularity Score */}
+                <div className="mt-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Popularity Score (0-100)
+                  </label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={formData.popularityScore || 50}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          popularityScore: parseInt(e.target.value),
+                        })
+                      }
+                      className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-600"
+                    />
+                    <span className="text-lg font-bold text-orange-600 min-w-12 text-right">
+                      {formData.popularityScore || 50}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 

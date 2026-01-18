@@ -12,6 +12,8 @@ import { CustomerSignupPage } from "./pages/CustomerSignupPage";
 import { CustomerProfilePage } from "./pages/CustomerProfilePage";
 import { ShopManagementPage } from "./pages/ShopManagementPage";
 import { CustomerOrderTrackingPage } from "./pages/CustomerOrderTrackingPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { apiClient } from "./services/api";
 
 // Mock Data - Replace with API calls
@@ -374,7 +376,20 @@ const getAnalyticsData = (partnerId) => ({
 });
 
 const App = () => {
-  const [currentPage, setCurrentPage] = useState("home");
+  // Check URL for reset password route on initial load
+  const getInitialPage = () => {
+    const path = window.location.pathname;
+    const search = window.location.search;
+    
+    // Check if URL contains reset-password token
+    if (search.includes('token=') && search.includes('type=')) {
+      return "reset-password";
+    }
+    
+    return "home";
+  };
+
+  const [currentPage, setCurrentPage] = useState(getInitialPage());
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [highlightedItemId, setHighlightedItemId] = useState(null);
   const [cart, setCart] = useState([]);
@@ -548,7 +563,14 @@ const App = () => {
               setCurrentPage("partner-dashboard");
             }
           }}
-          onNavigateToSignup={() => setCurrentPage("customer-signup")}
+          onNavigateToSignup={() => {
+            setShowLoginModal(false);
+            setCurrentPage("customer-signup");
+          }}
+          onNavigateToForgotPassword={(userType) => {
+            setShowLoginModal(false);
+            setCurrentPage(userType === "partner" ? "forgot-password-partner" : "forgot-password-customer");
+          }}
           language={language}
         />
       )}
@@ -629,6 +651,24 @@ const App = () => {
 
       {currentPage === "order-tracking" && (
         <CustomerOrderTrackingPage setCurrentPage={setCurrentPage} />
+      )}
+
+      {currentPage === "forgot-password-customer" && (
+        <ForgotPasswordPage
+          setCurrentPage={setCurrentPage}
+          userType="customer"
+        />
+      )}
+
+      {currentPage === "forgot-password-partner" && (
+        <ForgotPasswordPage
+          setCurrentPage={setCurrentPage}
+          userType="partner"
+        />
+      )}
+
+      {currentPage === "reset-password" && (
+        <ResetPasswordPage setCurrentPage={setCurrentPage} />
       )}
 
       <Footer language={language} />

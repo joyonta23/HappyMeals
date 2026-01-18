@@ -5,6 +5,10 @@ const {
   customerLogin,
   partnerLogin,
   updateCustomerProfile,
+  customerForgotPassword,
+  customerResetPassword,
+  partnerForgotPassword,
+  partnerResetPassword,
 } = require("../controllers/authController");
 const requireAuth = require("../middleware/auth");
 
@@ -34,5 +38,41 @@ router.post(
 );
 
 router.put("/customer-profile", requireAuth(), updateCustomerProfile);
+
+// Password reset routes for customers
+router.post(
+  "/customer-forgot-password",
+  [body("email").isEmail().withMessage("Valid email is required")],
+  customerForgotPassword
+);
+
+router.post(
+  "/customer-reset-password",
+  [
+    body("token").notEmpty().withMessage("Reset token is required"),
+    body("newPassword")
+      .isLength({ min: 6 })
+      .withMessage("Password must be at least 6 characters"),
+  ],
+  customerResetPassword
+);
+
+// Password reset routes for partners
+router.post(
+  "/partner-forgot-password",
+  [body("email").isEmail().withMessage("Valid email is required")],
+  partnerForgotPassword
+);
+
+router.post(
+  "/partner-reset-password",
+  [
+    body("token").notEmpty().withMessage("Reset token is required"),
+    body("newPassword")
+      .isLength({ min: 6 })
+      .withMessage("Password must be at least 6 characters"),
+  ],
+  partnerResetPassword
+);
 
 module.exports = router;

@@ -29,6 +29,13 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
     description: "",
     image: "",
     preparationTime: "",
+    // Chatbot fields
+    category: "other",
+    dietary: ["non-vegetarian"],
+    spiceLevel: "medium",
+    allergens: [],
+    isSide: false,
+    popularityScore: 50,
   });
   const [itemImageFile, setItemImageFile] = useState(null);
   const [showAddItem, setShowAddItem] = useState(false);
@@ -166,6 +173,17 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
     if (newItem.preparationTime) {
       formData.append("preparationTime", newItem.preparationTime);
     }
+    // Chatbot fields
+    formData.append("category", newItem.category || "other");
+    formData.append("spiceLevel", newItem.spiceLevel || "medium");
+    formData.append("isSide", newItem.isSide || false);
+    formData.append("popularityScore", newItem.popularityScore || 50);
+    if (newItem.dietary && newItem.dietary.length > 0) {
+      formData.append("dietary", JSON.stringify(newItem.dietary));
+    }
+    if (newItem.allergens && newItem.allergens.length > 0) {
+      formData.append("allergens", JSON.stringify(newItem.allergens));
+    }
     if (itemImageFile) {
       console.log(
         "Appending file to FormData:",
@@ -204,6 +222,12 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
           description: "",
           image: "",
           preparationTime: "",
+          category: "other",
+          dietary: ["non-vegetarian"],
+          spiceLevel: "medium",
+          allergens: [],
+          isSide: false,
+          popularityScore: 50,
         });
         setItemImageFile(null);
         setShowAddItem(false);
@@ -548,6 +572,152 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
                     </span>
                   )}
                 </div>
+
+                {/* Chatbot Fields Section */}
+                <div className="border-t pt-4 mt-4">
+                  <h4 className="font-semibold text-gray-700 mb-3">
+                    Chatbot Settings
+                  </h4>
+
+                  {/* Category */}
+                  <select
+                    value={newItem.category || "other"}
+                    onChange={(e) =>
+                      setNewItem({ ...newItem, category: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 mb-3"
+                  >
+                    <option value="other">Category - Other</option>
+                    <option value="biryani">Category - Biryani</option>
+                    <option value="grilled">Category - Grilled</option>
+                    <option value="drink">Category - Drink</option>
+                    <option value="side">Category - Side</option>
+                    <option value="salad">Category - Salad</option>
+                    <option value="dessert">Category - Dessert</option>
+                    <option value="bread">Category - Bread</option>
+                  </select>
+
+                  {/* Dietary - Checkboxes */}
+                  <div className="mb-3">
+                    <label className="block text-sm text-gray-700 mb-2">
+                      Dietary Options:
+                    </label>
+                    <div className="space-y-2">
+                      {["vegetarian", "non-vegetarian", "vegan", "halal"].map(
+                        (diet) => (
+                          <label key={diet} className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={newItem.dietary?.includes(diet) || false}
+                              onChange={(e) => {
+                                const updated = [...(newItem.dietary || [])];
+                                if (e.target.checked) {
+                                  if (!updated.includes(diet))
+                                    updated.push(diet);
+                                } else {
+                                  const idx = updated.indexOf(diet);
+                                  if (idx > -1) updated.splice(idx, 1);
+                                }
+                                setNewItem({ ...newItem, dietary: updated });
+                              }}
+                              className="rounded"
+                            />
+                            <span className="text-sm text-gray-600 capitalize">
+                              {diet}
+                            </span>
+                          </label>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Spice Level */}
+                  <select
+                    value={newItem.spiceLevel || "medium"}
+                    onChange={(e) =>
+                      setNewItem({ ...newItem, spiceLevel: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 mb-3"
+                  >
+                    <option value="mild">Spice Level - Mild</option>
+                    <option value="medium">Spice Level - Medium</option>
+                    <option value="spicy">Spice Level - Spicy</option>
+                  </select>
+
+                  {/* Allergens - Checkboxes */}
+                  <div className="mb-3">
+                    <label className="block text-sm text-gray-700 mb-2">
+                      Allergens:
+                    </label>
+                    <div className="space-y-2">
+                      {["nuts", "dairy", "gluten", "shellfish", "eggs"].map(
+                        (allergen) => (
+                          <label
+                            key={allergen}
+                            className="flex items-center gap-2"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={
+                                newItem.allergens?.includes(allergen) || false
+                              }
+                              onChange={(e) => {
+                                const updated = [...(newItem.allergens || [])];
+                                if (e.target.checked) {
+                                  if (!updated.includes(allergen))
+                                    updated.push(allergen);
+                                } else {
+                                  const idx = updated.indexOf(allergen);
+                                  if (idx > -1) updated.splice(idx, 1);
+                                }
+                                setNewItem({ ...newItem, allergens: updated });
+                              }}
+                              className="rounded"
+                            />
+                            <span className="text-sm text-gray-600 capitalize">
+                              {allergen}
+                            </span>
+                          </label>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Is Side */}
+                  <label className="flex items-center gap-2 mb-3">
+                    <input
+                      type="checkbox"
+                      checked={newItem.isSide || false}
+                      onChange={(e) =>
+                        setNewItem({ ...newItem, isSide: e.target.checked })
+                      }
+                      className="rounded"
+                    />
+                    <span className="text-sm text-gray-700">
+                      This is a side dish (e.g., drink, salad, naan)
+                    </span>
+                  </label>
+
+                  {/* Popularity Score */}
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-2">
+                      Popularity Score (0-100): {newItem.popularityScore || 50}
+                    </label>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={newItem.popularityScore || 50}
+                      onChange={(e) =>
+                        setNewItem({
+                          ...newItem,
+                          popularityScore: parseInt(e.target.value),
+                        })
+                      }
+                      className="w-full"
+                    />
+                  </div>
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => {
@@ -558,6 +728,12 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
                         description: "",
                         image: "",
                         preparationTime: "",
+                        category: "other",
+                        dietary: ["non-vegetarian"],
+                        spiceLevel: "medium",
+                        allergens: [],
+                        isSide: false,
+                        popularityScore: 50,
                       });
                       setItemImageFile(null);
                     }}

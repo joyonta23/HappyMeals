@@ -10,6 +10,8 @@ const partnerSchema = new mongoose.Schema(
     address: { type: String, required: true },
     city: { type: String, required: true, default: "Chattogram" },
     restaurant: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant" },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
   },
   { timestamps: true }
 );

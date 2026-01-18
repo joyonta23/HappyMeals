@@ -1,6 +1,8 @@
 const { validationResult } = require("express-validator");
 const { hashPassword, comparePassword } = require("../utils/hash");
 const { signToken } = require("../utils/tokens");
+const { sendPasswordResetEmail } = require("../utils/email");
+const crypto = require("crypto");
 const User = require("../models/User");
 const Partner = require("../models/Partner");
 
@@ -90,9 +92,12 @@ const partnerLogin = async (req, res, next) => {
       "with email:",
       partner.email
     );
-    console.log("Stored password hash:", partner.passwordHash.substring(0, 20) + "...");
+    console.log(
+      "Stored password hash:",
+      partner.passwordHash.substring(0, 20) + "..."
+    );
     console.log("Attempting password:", password);
-    
+
     const ok = await comparePassword(password, partner.passwordHash);
     if (!ok) {
       console.log("Password mismatch for partner:", partnerId);
@@ -176,9 +181,165 @@ const updateCustomerProfile = async (req, res, next) => {
   }
 };
 
+// Customer forgot password - request reset
+const customerForgotPassword = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    // Always return success to prevent email enumeration
+    if (!user) {
+      return res.json({
+        message: "If that email exists, a reset link has been sent",
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    user.resetPasswordToken = tokenHash;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    // Send email
+    await sendPasswordResetEmail(email, resetToken, "customer");
+
+    res.json({ message: "If that email exists, a reset link has been sent" });
+  } catch (err) {
+    console.error("Customer forgot password error:", err);
+    next(err);
+  }
+};
+
+// Customer reset password with token
+const customerResetPassword = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { token, newPassword } = req.body;
+
+    // Hash the token to compare with stored hash
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: tokenHash,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired reset token" });
+    }
+
+    // Update password
+    user.passwordHash = await hashPassword(newPassword);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ message: "Password reset successful" });
+  } catch (err) {
+    console.error("Customer reset password error:", err);
+    next(err);
+  }
+};
+
+// Partner forgot password - request reset
+const partnerForgotPassword = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email } = req.body;
+    const partner = await Partner.findOne({ email });
+
+    // Always return success to prevent email enumeration
+    if (!partner) {
+      return res.json({
+        message: "If that email exists, a reset link has been sent",
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    partner.resetPasswordToken = tokenHash;
+    partner.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await partner.save();
+
+    // Send email
+    await sendPasswordResetEmail(email, resetToken, "partner");
+
+    res.json({ message: "If that email exists, a reset link has been sent" });
+  } catch (err) {
+    console.error("Partner forgot password error:", err);
+    next(err);
+  }
+};
+
+// Partner reset password with token
+const partnerResetPassword = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { token, newPassword } = req.body;
+
+    // Hash the token to compare with stored hash
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const partner = await Partner.findOne({
+      resetPasswordToken: tokenHash,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!partner) {
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired reset token" });
+    }
+
+    // Update password
+    partner.passwordHash = await hashPassword(newPassword);
+    partner.resetPasswordToken = undefined;
+    partner.resetPasswordExpires = undefined;
+    await partner.save();
+
+    res.json({ message: "Password reset successful" });
+  } catch (err) {
+    console.error("Partner reset password error:", err);
+    next(err);
+  }
+};
+
 module.exports = {
   customerSignup,
   customerLogin,
   partnerLogin,
   updateCustomerProfile,
+  customerForgotPassword,
+  customerResetPassword,
+  partnerForgotPassword,
+  partnerResetPassword,
 };

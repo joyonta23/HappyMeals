@@ -8,6 +8,8 @@ const config = {
   mongoUri: process.env.MONGODB_URI || "",
   jwtSecret: process.env.JWT_SECRET || "",
   corsOrigin: process.env.CORS_ORIGIN || "http://localhost:3000",
+  emailUser: process.env.EMAIL_USER || "",
+  emailPassword: process.env.EMAIL_PASSWORD || "",
 };
 
 module.exports = config;

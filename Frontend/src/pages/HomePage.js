@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { Hero } from "../components/Hero";
 import { RestaurantCard } from "../components/RestaurantCard";
 import PopularDishes from "../components/PopularDishes";
+import ChatbotAssistant from "../components/ChatbotAssistant";
 
 export const HomePage = ({
   restaurants = [],
@@ -21,12 +22,13 @@ export const HomePage = ({
     rating4Plus: false,
   });
   const [showSignUpBanner, setShowSignUpBanner] = useState(true);
+  const [showChatbot, setShowChatbot] = useState(false);
+  const [chatbotHovered, setChatbotHovered] = useState(false);
   const isLoggedIn = !!(
     localStorage.getItem("authToken") ||
     localStorage.getItem("partnerToken") ||
     localStorage.getItem("user")
   );
-
 
   const cuisines = [
     {
@@ -92,7 +94,10 @@ export const HomePage = ({
         const items = Array.isArray(r.items) ? r.items : [];
         return items.some((it) => {
           const expiresAt = it?.offerExpires ? new Date(it.offerExpires) : null;
-          return Number(it?.discountPercent || 0) > 0 && (!expiresAt || expiresAt > now);
+          return (
+            Number(it?.discountPercent || 0) > 0 &&
+            (!expiresAt || expiresAt > now)
+          );
         });
       });
     }
@@ -117,8 +122,54 @@ export const HomePage = ({
     }
   };
 
+  const handleAddComboToCart = (combo) => {
+    // Add each item in the combo to cart
+    if (combo.items && combo.items.length > 0) {
+      combo.items.forEach((item) => {
+        if (onAddToCart) {
+          onAddToCart({
+            ...item,
+            quantity: 1,
+            fromCombo: true,
+            comboId: combo._id,
+          });
+        }
+      });
+      // Close chatbot after adding
+      setShowChatbot(false);
+    }
+  };
+
   return (
     <>
+      {/* AI Chatbot Button - Visible to all users */}
+      <button
+        onClick={() => setShowChatbot(!showChatbot)}
+        onMouseEnter={() => setChatbotHovered(true)}
+        onMouseLeave={() => setChatbotHovered(false)}
+        className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-purple-500 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 font-semibold"
+        title={
+          chatbotHovered
+            ? "Food Assistant - Get meal suggestions"
+            : "খাবার সহায়ক - খাবার সাজেশন পান"
+        }
+      >
+        <span className="text-lg">🤖</span>
+        <span className="hidden sm:inline">
+          {chatbotHovered ? "খাবার সহায়ক" : "Food Assistant"}
+        </span>
+      </button>
+
+      {/* AI Chatbot Modal - Visible to all users */}
+      {showChatbot && (
+        <div className="fixed bottom-24 right-6 z-50 w-full max-w-sm">
+          <ChatbotAssistant
+            onAddToCart={handleAddComboToCart}
+            onClose={() => setShowChatbot(false)}
+          />
+        </div>
+      )}
+
       <Hero
         onSearch={(query) => console.log("Search:", query)}
         language={language}
@@ -138,11 +189,17 @@ export const HomePage = ({
 
           if (typeof onSelectRestaurant === "function") {
             const found = restaurants.find(
-              (r) => (r._id && String(r._id) === String(restaurantId)) || (r.id && String(r.id) === String(restaurantId))
+              (r) =>
+                (r._id && String(r._id) === String(restaurantId)) ||
+                (r.id && String(r.id) === String(restaurantId))
             );
             const payload = found
               ? { ...found, _highlightItemId: itemId }
-              : { _id: restaurantId, id: restaurantId, _highlightItemId: itemId };
+              : {
+                  _id: restaurantId,
+                  id: restaurantId,
+                  _highlightItemId: itemId,
+                };
             onSelectRestaurant(payload);
           } else {
             console.log("Suggestion selected", restaurantId, itemId);
@@ -171,7 +228,9 @@ export const HomePage = ({
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setCurrentPage && setCurrentPage("customer-signup")}
+                  onClick={() =>
+                    setCurrentPage && setCurrentPage("customer-signup")
+                  }
                   className="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700 transition"
                 >
                   Sign up
@@ -213,8 +272,8 @@ export const HomePage = ({
           </div>
         </div>
 
-          {/* Popular dishes */}
-          <PopularDishes onAddToCart={onAddToCart} />
+        {/* Popular dishes */}
+        <PopularDishes onAddToCart={onAddToCart} />
       </div>
 
       <div className="container mx-auto px-4 py-8">

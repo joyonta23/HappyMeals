@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
-require("dotenv").config({ path: "../config/.env" });
+require("dotenv").config();
 const MenuItem = require("../models/MenuItem");
 const Restaurant = require("../models/Restaurant");
 
 async function checkMenuItems() {
   try {
     const mongoURI =
-      process.env.MONGO_URI || "mongodb://localhost:27017/happymeal";
+      process.env.MONGODB_URI || "mongodb://localhost:27017/happymeal";
     console.log("Connecting to MongoDB:", mongoURI);
 
     await mongoose.connect(mongoURI);

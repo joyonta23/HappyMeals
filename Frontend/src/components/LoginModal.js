@@ -2,7 +2,12 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import { apiClient } from "../services/api";
 
-export const LoginModal = ({ onClose, onLogin, onNavigateToSignup }) => {
+export const LoginModal = ({
+  onClose,
+  onLogin,
+  onNavigateToSignup,
+  onNavigateToForgotPassword,
+}) => {
   const [loginType, setLoginType] = useState("customer");
   const [partnerId, setPartnerId] = useState("");
   const [email, setEmail] = useState("");
@@ -196,6 +201,24 @@ export const LoginModal = ({ onClose, onLogin, onNavigateToSignup }) => {
           >
             Login
           </button>
+
+          {/* Forgot Password Link */}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                if (onNavigateToForgotPassword) {
+                  onNavigateToForgotPassword(
+                    loginType === "partner" ? "partner" : "customer"
+                  );
+                }
+              }}
+              className="text-sm text-orange-600 hover:underline"
+            >
+              Forgot your password?
+            </button>
+          </div>
         </form>
 
         <p className="text-center text-sm text-gray-600 mt-4">

@@ -6,6 +6,8 @@ const {
   registerPartner,
   changePassword,
   addMenuItem,
+  updateRestaurantImage,
+  updateMenuItem,
 } = require("../controllers/partnerController");
 const requireAuth = require("../middleware/auth");
 
@@ -80,6 +82,24 @@ router.post(
   addMenuItem
 );
 
+// Update menu item with chatbot fields
+router.put(
+  "/items/:id",
+  requireAuth("partner"),
+  upload.single("image"),
+  [
+    param("id").isMongoId().withMessage("Invalid menu item id"),
+    body("name").optional().notEmpty().withMessage("Item name cannot be empty"),
+    body("price")
+      .optional()
+      .isFloat({ gt: 0 })
+      .withMessage("Price must be greater than 0"),
+    body("description").optional().isLength({ max: 500 }),
+    body("preparationTime").optional().isLength({ max: 50 }),
+  ],
+  updateMenuItem
+);
+
 // Update offer fields for a menu item (partner-only)
 router.put(
   "/items/:id/offer",
@@ -97,6 +117,14 @@ router.put(
     body("offerExpires").optional().isISO8601().toDate(),
   ],
   require("../controllers/partnerController").setItemOffer
+);
+
+// Update restaurant image
+router.put(
+  "/restaurant/image",
+  requireAuth("partner"),
+  upload.single("image"),
+  updateRestaurantImage
 );
 
 module.exports = router;

@@ -14,6 +14,7 @@ const restaurantRoutes = require("./routes/restaurants");
 const orderRoutes = require("./routes/orders");
 const analyticsRoutes = require("./routes/analytics");
 const partnerRoutes = require("./routes/partners");
+const chatbotRoutes = require("./routes/chatbot");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/partners", partnerRoutes);
+app.use("/api/chatbot", chatbotRoutes);
 
 app.use(errorHandler);
 
