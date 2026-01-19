@@ -6,6 +6,7 @@ import {
   Facebook,
   Instagram,
   Twitter,
+  Linkedin,
 } from "lucide-react";
 
 export const Footer = () => (
@@ -28,11 +29,11 @@ export const Footer = () => (
           <div className="mt-4 space-y-2 text-sm text-gray-400">
             <div className="flex items-center gap-2">
               <Mail size={16} />
-              <span>support@happymeals.com</span>
+              <span>joyontabiswas2022@gmail.com</span>
             </div>
             <div className="flex items-center gap-2">
               <Phone size={16} />
-              <span>+880 1700 000000</span>
+              <span>+880 1795430142</span>
             </div>
           </div>
         </div>
@@ -74,22 +75,22 @@ export const Footer = () => (
           <h4 className="font-semibold mb-4 text-white">Follow Us</h4>
           <div className="flex gap-4">
             <a
-              href="#"
+              href="https://www.facebook.com/joyonto.biswas111111000000#"
               className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center hover:bg-orange-700 transition"
             >
               <Facebook size={20} />
             </a>
             <a
-              href="#"
+              href="https://www.instagram.com/joyonto.biswas111111000000#"
               className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center hover:bg-orange-700 transition"
             >
               <Instagram size={20} />
             </a>
             <a
-              href="#"
+              href="https://www.linkedin.com/in/joyonta-biswas-a6525a1b2/"
               className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center hover:bg-orange-700 transition"
             >
-              <Twitter size={20} />
+              <Linkedin size={20} />
             </a>
           </div>
         </div>
