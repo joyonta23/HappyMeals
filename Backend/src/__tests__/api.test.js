@@ -1,8 +1,3 @@
-/**
- * Sample test file demonstrating Jest setup for HappyMeal Backend
- * Tests are organized by functionality area
- */
-
 describe("HappyMeal API - Smoke Tests", () => {
   describe("Health Check Endpoint", () => {
     it("should verify health check endpoint exists", () => {

@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Edit2,
-  Save,
-  X,
-  Plus,
-  Trash2,
-  MapPin,
-  Phone,
-  Clock,
-} from "lucide-react";
+import { Edit2, Save, Plus, Trash2, MapPin, Phone, Clock } from "lucide-react";
 import { apiClient } from "../services/api";
 
 export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
@@ -83,7 +74,7 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
           console.log(
             "Loaded",
             restaurantData.items.length,
-            "menu items from database"
+            "menu items from database",
           );
           setItems(restaurantData.items);
         }
@@ -113,8 +104,8 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
         // update local items
         setItems((prev) =>
           prev.map((it) =>
-            String(it._id || it.id) === String(itemId) ? res.item : it
-          )
+            String(it._id || it.id) === String(itemId) ? res.item : it,
+          ),
         );
         alert("Offer updated");
         setActiveOfferItem(null);
@@ -189,7 +180,7 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
         "Appending file to FormData:",
         itemImageFile.name,
         itemImageFile.type,
-        itemImageFile.size
+        itemImageFile.size,
       );
       formData.append("image", itemImageFile);
     } else if (newItem.image?.trim()) {
@@ -626,7 +617,7 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
                               {diet}
                             </span>
                           </label>
-                        )
+                        ),
                       )}
                     </div>
                   </div>
@@ -678,7 +669,7 @@ export const ShopManagementPage = ({ partnerData, setCurrentPage }) => {
                               {allergen}
                             </span>
                           </label>
-                        )
+                        ),
                       )}
                     </div>
                   </div>
