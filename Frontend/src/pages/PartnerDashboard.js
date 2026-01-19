@@ -13,7 +13,6 @@ import {
   Settings,
   LogOut,
   CheckCircle,
-  Clock,
   Truck,
   Store,
   CreditCard,
@@ -41,7 +40,6 @@ export const PartnerDashboard = ({
   const [incomingOrders, setIncomingOrders] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
-  const [unreadOrderCount, setUnreadOrderCount] = useState(0);
   const notificationKey = "partner-notifications";
 
   const restaurantId =
@@ -52,7 +50,6 @@ export const PartnerDashboard = ({
     const orders = JSON.parse(localStorage.getItem("partner-orders") || "[]");
     setIncomingOrders(orders);
     const unread = orders.filter((o) => !o.notificationRead).length;
-    setUnreadOrderCount(unread);
   }, [activeTab]);
 
   const pushNotification = (message, orderId, type = "info") => {
@@ -72,12 +69,12 @@ export const PartnerDashboard = ({
   const updateCustomerOrderStatus = (orderId, status) => {
     const userOrders = JSON.parse(localStorage.getItem("orders") || "[]");
     const updated = userOrders.map((o) =>
-      o.id === orderId ? { ...o, status } : o
+      o.id === orderId ? { ...o, status } : o,
     );
     localStorage.setItem("orders", JSON.stringify(updated));
 
     const userNotifs = JSON.parse(
-      localStorage.getItem("user-notifications") || "[]"
+      localStorage.getItem("user-notifications") || "[]",
     );
     const entry = {
       id: `unotif-${Date.now()}`,
@@ -105,20 +102,19 @@ export const PartnerDashboard = ({
       const response = await apiClient.updateOrderStatus(
         orderId,
         "accepted",
-        token
+        token,
       );
       if (response?.order) {
         const orders = JSON.parse(
-          localStorage.getItem("partner-orders") || "[]"
+          localStorage.getItem("partner-orders") || "[]",
         );
         const updated = orders.map((o) =>
           o.id === orderId
             ? { ...o, status: "accepted", notificationRead: true }
-            : o
+            : o,
         );
         localStorage.setItem("partner-orders", JSON.stringify(updated));
         setIncomingOrders(updated);
-        setUnreadOrderCount(updated.filter((o) => !o.notificationRead).length);
 
         updateCustomerOrderStatus(orderId, "accepted");
         pushNotification(`Order ${orderId} accepted`, orderId, "success");
@@ -140,20 +136,19 @@ export const PartnerDashboard = ({
       const response = await apiClient.updateOrderStatus(
         orderId,
         "rejected",
-        token
+        token,
       );
       if (response?.order) {
         const orders = JSON.parse(
-          localStorage.getItem("partner-orders") || "[]"
+          localStorage.getItem("partner-orders") || "[]",
         );
         const updated = orders.map((o) =>
           o.id === orderId
             ? { ...o, status: "rejected", notificationRead: true }
-            : o
+            : o,
         );
         localStorage.setItem("partner-orders", JSON.stringify(updated));
         setIncomingOrders(updated);
-        setUnreadOrderCount(updated.filter((o) => !o.notificationRead).length);
 
         updateCustomerOrderStatus(orderId, "rejected");
         pushNotification(`Order ${orderId} rejected`, orderId, "error");
@@ -257,7 +252,7 @@ export const PartnerDashboard = ({
     ? Math.round(
         (reviewList.reduce((sum, r) => sum + (r.rating || 0), 0) /
           reviewList.length) *
-          10
+          10,
       ) / 10
     : analyticsData.averageRating;
   const reviewCount = reviewList.length || analyticsData.reviews.length;
@@ -338,8 +333,8 @@ export const PartnerDashboard = ({
           prev.map((it) =>
             String(it._id || it.id) === String(itemId)
               ? { ...it, ...res.item }
-              : it
-          )
+              : it,
+          ),
         );
         setActiveOfferItem(null);
         alert("Offer updated");
@@ -357,8 +352,8 @@ export const PartnerDashboard = ({
   const handleToggleAvailability = (id) => {
     setMenuItems(
       menuItems.map((item) =>
-        item.id === id ? { ...item, available: !item.available } : item
-      )
+        item.id === id ? { ...item, available: !item.available } : item,
+      ),
     );
   };
 
@@ -431,8 +426,8 @@ export const PartnerDashboard = ({
         menuItems.map((item) =>
           item.id === editingItem.id
             ? { ...formData, id: editingItem.id }
-            : item
-        )
+            : item,
+        ),
       );
       setShowMenuModal(false);
       setEditingItem(null);
@@ -444,7 +439,8 @@ export const PartnerDashboard = ({
 
     if (selectedCategory !== "all") {
       filtered = filtered.filter(
-        (item) => item.category.toLowerCase() === selectedCategory.toLowerCase()
+        (item) =>
+          item.category.toLowerCase() === selectedCategory.toLowerCase(),
       );
     }
 
@@ -454,7 +450,7 @@ export const PartnerDashboard = ({
           (item.name || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
           (item.description || "")
             .toLowerCase()
-            .includes(searchQuery.toLowerCase())
+            .includes(searchQuery.toLowerCase()),
       );
     }
 
@@ -711,7 +707,7 @@ export const PartnerDashboard = ({
               <div className="space-y-4">
                 {analyticsData.dailySales.map((day, idx) => {
                   const maxAmount = Math.max(
-                    ...analyticsData.dailySales.map((d) => d.amount)
+                    ...analyticsData.dailySales.map((d) => d.amount),
                   );
                   const width = (day.amount / maxAmount) * 100;
                   return (
@@ -1031,7 +1027,7 @@ export const PartnerDashboard = ({
                                 day: "numeric",
                                 hour: "2-digit",
                                 minute: "2-digit",
-                              }
+                              },
                             )}
                           </p>
                         </div>
@@ -1403,7 +1399,7 @@ export const PartnerDashboard = ({
                       {(() => {
                         const itemId = item._id || item.id;
                         const hasMongoId = /^[a-f\d]{24}$/i.test(
-                          String(itemId)
+                          String(itemId),
                         );
                         if (!hasMongoId) {
                           return (
@@ -1427,11 +1423,11 @@ export const PartnerDashboard = ({
                               setActiveOfferItem(
                                 String(activeOfferItem) === String(itemId)
                                   ? null
-                                  : itemId
+                                  : itemId,
                               );
                               setOfferForm({
                                 discountPercent: Number(
-                                  item.discountPercent || 0
+                                  item.discountPercent || 0,
                                 ),
                                 freeDelivery: !!item.freeDelivery,
                                 offerExpires: expires,
@@ -1764,7 +1760,7 @@ export const PartnerDashboard = ({
                         <input
                           type="checkbox"
                           checked={(formData.allergens || []).includes(
-                            allergen
+                            allergen,
                           )}
                           onChange={(e) => {
                             const currentAllergens = formData.allergens || [];
