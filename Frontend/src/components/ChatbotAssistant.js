@@ -23,7 +23,6 @@ const ChatbotAssistant = ({
     },
   ]);
   const [priceRange, setPriceRange] = useState("");
-  const [preferences, setPreferences] = useState("");
   const [combos, setCombos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -103,7 +102,6 @@ const ChatbotAssistant = ({
     } else if (step === 2) {
       // Preferences step
       const userPreferences = inputValue;
-      setPreferences(userPreferences);
       setInputValue("");
       addMessage("bot", getText("Thinking...", "চিন্তা করছি..."));
       setLoading(true);
@@ -139,7 +137,6 @@ const ChatbotAssistant = ({
           addMessage("bot", retryMsg);
           setStep(1);
           setPriceRange("");
-          setPreferences("");
         }
       } catch (error) {
         console.error("Error in handleSubmit:", error);
@@ -152,7 +149,6 @@ const ChatbotAssistant = ({
         addMessage("bot", errorMsg);
         setStep(1);
         setPriceRange("");
-        setPreferences("");
       }
     }
   };
@@ -160,7 +156,6 @@ const ChatbotAssistant = ({
   const handleRestart = () => {
     setStep(1);
     setPriceRange("");
-    setPreferences("");
     setCombos([]);
     setInputValue("");
     const greeting =
