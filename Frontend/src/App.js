@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { LoginModal } from "./components/LoginModal";
@@ -293,25 +293,7 @@ const mockRestaurants = [
   },
 ];
 
-// Mock Partner Accounts (Restaurant Owners)
-const partnerAccounts = {
-  PARTNER001: {
-    id: "PARTNER001",
-    password: "demo123",
-    restaurantId: 1,
-    restaurantName: "Burger King",
-    ownerName: "John Doe",
-    email: "john@burgerking.com",
-  },
-  PARTNER002: {
-    id: "PARTNER002",
-    password: "demo123",
-    restaurantId: 2,
-    restaurantName: "Pizza Hut",
-    ownerName: "Jane Smith",
-    email: "jane@pizzahut.com",
-  },
-};
+
 
 // Mock Analytics Data
 const getAnalyticsData = (partnerId) => ({
@@ -378,7 +360,6 @@ const getAnalyticsData = (partnerId) => ({
 const App = () => {
   // Check URL for reset password route on initial load
   const getInitialPage = () => {
-    const path = window.location.pathname;
     const search = window.location.search;
     
     // Check if URL contains reset-password token
@@ -393,7 +374,7 @@ const App = () => {
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [highlightedItemId, setHighlightedItemId] = useState(null);
   const [cart, setCart] = useState([]);
-  const [location, setLocation] = useState("Chattogram");
+  const [location] = useState("Chattogram");
   const [loggedInPartner, setLoggedInPartner] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [restaurants, setRestaurants] = useState(mockRestaurants);
@@ -428,7 +409,7 @@ const App = () => {
   };
 
   // Fetch restaurants from API
-  const loadRestaurants = async () => {
+  const loadRestaurants = useCallback(async () => {
     try {
       const data = await apiClient.getRestaurants();
       if (Array.isArray(data) && data.length > 0) {
@@ -441,18 +422,18 @@ const App = () => {
       console.error("Error loading restaurants:", error);
       setRestaurants(mockRestaurants);
     }
-  };
+  }, []);
 
   React.useEffect(() => {
     loadRestaurants();
-  }, []);
+  }, [loadRestaurants]);
 
   // Ensure Home list reflects latest offers/items after partner changes
   React.useEffect(() => {
     if (currentPage === "home") {
       loadRestaurants();
     }
-  }, [currentPage]);
+  }, [currentPage, loadRestaurants]);
 
   const handleRestaurantSelection = async (restaurant) => {
     const id = restaurant._id || restaurant.id;
@@ -514,24 +495,7 @@ const App = () => {
     setCart([]);
   };
 
-  const getTotalPrice = () => {
-    const subtotal = cart.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-    const now = new Date();
-    const hasActiveFreeDelivery = cart.some((item) => {
-      const expiresAt = item?.offerExpires ? new Date(item.offerExpires) : null;
-      return !!item?.freeDelivery && (!expiresAt || expiresAt > now);
-    });
-    const deliveryFee =
-      cart.length > 0
-        ? hasActiveFreeDelivery
-          ? 0
-          : selectedRestaurant?.deliveryFee || 30
-        : 0;
-    return { subtotal, deliveryFee, total: subtotal + deliveryFee };
-  };
+
 
   return (
     <div className="min-h-screen bg-gray-50">

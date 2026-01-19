@@ -1,11 +1,9 @@
 import React from "react";
 import {
-  MapPin,
   Mail,
   Phone,
   Facebook,
   Instagram,
-  Twitter,
   Linkedin,
 } from "lucide-react";
 
