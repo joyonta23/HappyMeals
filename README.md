@@ -2,52 +2,6 @@
 
 A full-stack MERN (MongoDB, Express, React, Node.js) food ordering platform inspired by Foodpanda, featuring customer authentication, restaurant browsing, order management, and partner dashboards with bilingual support (English & Bengali).
 
-## 🎯 Features
-
-### Customer Features
-
-- ✅ **User Authentication** - Signup/Login with JWT tokens
-- ✅ **Customer Profile** - Manage personal info, addresses, payment methods
-- ✅ **Restaurant Browsing** - Search and filter restaurants by cuisine, rating, delivery fee
-- ✅ **Menu Viewing** - Browse food items with prices and descriptions
-- ✅ **Shopping Cart** - Add/remove items, manage quantities
-- ✅ **Order Checkout** - Place orders with delivery details
-- ✅ **Bilingual Support** - English & বাংলা (Bengali)
-
-### Partner/Restaurant Features
-
-- 🏪 **Partner Login** - Secure login for restaurant owners
-- 📊 **Dashboard** - Analytics, daily sales, order tracking
-- 🎯 **Menu Management** - Add/edit menu items and pricing
-- 📈 **Business Insights** - Revenue, popular items, customer reviews
-
-### General Features
-
-- 🌐 **Responsive Design** - Mobile-friendly UI with Tailwind CSS
-- 🔐 **Security** - Password hashing, JWT authentication, protected routes
-- 💾 **Database** - MongoDB Atlas integration with Mongoose ODM
-- 🎨 **Modern UI** - Gradient backgrounds, animations, icons (Lucide React)
-
-## 🛠️ Tech Stack
-
-### Frontend
-
-- **React 18.2** - UI library
-- **Tailwind CSS** - Utility-first CSS framework
-- **Lucide React** - Icon library
-- **JavaScript (ES6+)** - Programming language
-
-### Backend
-
-- **Node.js** - Runtime environment
-- **Express 4.18** - Web framework
-- **MongoDB 7.6** - NoSQL database (Atlas)
-- **Mongoose 7.6** - ODM for MongoDB
-- **JWT** - Authentication tokens
-- **bcryptjs** - Password hashing
-- **Helmet** - Security middleware
-- **CORS** - Cross-origin resource sharing
-
 ### Tools & Services
 
 - **MongoDB Atlas** - Cloud database (free M0 tier)
@@ -55,354 +9,526 @@ A full-stack MERN (MongoDB, Express, React, Node.js) food ordering platform insp
 - **Nodemon** - Development auto-reload
 - **dotenv** - Environment variables
 
-## 📋 Project Structure
+## 📋 Project Structure & Features:
 
 ```
-HappyMeals/
-├── Frontend/                    # React application
-│   ├── public/                  # Static assets
-│   ├── src/
-│   │   ├── components/          # Reusable components
-│   │   │   ├── Navbar.js
-│   │   │   ├── Hero.js
-│   │   │   ├── LoginModal.js
-│   │   │   ├── Footer.js
-│   │   │   └── RestaurantCard.js
-│   │   ├── pages/               # Page components
-│   │   │   ├── HomePage.js
-│   │   │   ├── RestaurantPage.js
-│   │   │   ├── CheckoutPage.js
-│   │   │   ├── CustomerProfilePage.js
-│   │   │   ├── CustomerSignupPage.js
-│   │   │   ├── PartnerDashboard.js
-│   │   │   └── RestaurantPartnerPage.js
-│   │   ├── services/            # API client
-│   │   │   └── api.js
-│   │   ├── utils/               # Utilities
-│   │   │   └── translations.js
-│   │   ├── App.js               # Main app component
-│   │   └── index.js             # Entry point
-│   ├── package.json
-│   └── tailwind.config.js
+HappyMeal Food Ordering/
 │
-├── Backend/                     # Express API
-│   ├── src/
-│   │   ├── config/              # Configuration
-│   │   │   ├── db.js
-│   │   │   └── env.js
-│   │   ├── controllers/         # Business logic
-│   │   │   ├── authController.js
-│   │   │   ├── restaurantController.js
-│   │   │   ├── orderController.js
-│   │   │   ├── analyticsController.js
-│   │   │   └── partnerController.js
-│   │   ├── models/              # Database schemas
-│   │   │   ├── User.js
-│   │   │   ├── Partner.js
-│   │   │   ├── Restaurant.js
-│   │   │   ├── MenuItem.js
-│   │   │   └── Order.js
-│   │   ├── routes/              # API endpoints
-│   │   │   ├── auth.js
-│   │   │   ├── restaurants.js
-│   │   │   ├── orders.js
-│   │   │   ├── analytics.js
-│   │   │   └── partners.js
-│   │   ├── middleware/          # Express middleware
-│   │   │   ├── auth.js          # JWT verification
-│   │   │   └── error.js         # Error handling
-│   │   ├── utils/               # Utilities
-│   │   │   ├── hash.js          # bcrypt helpers
-│   │   │   └── tokens.js        # JWT helpers
-│   │   ├── scripts/
-│   │   │   └── seed.js          # Database seeding
-│   │   └── server.js            # Express app setup
-│   ├── package.json
-│   ├── .env.example
-│   └── .env                     # Actual env vars (not in repo)
+├── .github/                              # GitHub Actions & Templates
+│   ├── workflows/
+│   │   └── test.yml                      # CI/CD automated testing
+│   └── TESTING_GUIDE.md                  # Testing documentation
 │
-├── .gitignore
-└── README.md
+├── Frontend/                             # React Client Application
+│   ├── public/                           # Static assets served by React
+│   │   ├── index.html                    # HTML template
+│   │   ├── manifest.json                 # PWA manifest
+│   │   └── robots.txt                    # SEO robots file
+│   │
+│   ├── src/
+│   │   ├── components/                   # ✨ Reusable UI Components
+│   │   │   ├── ChatbotAssistant.js       # AI combo recommendation chatbot
+│   │   │   ├── ChatbotAssistant.css      # Chatbot styling
+│   │   │   ├── ComboCard.js              # Combo suggestion card
+│   │   │   ├── ComboCard.css             # Combo card styling
+│   │   │   ├── Footer.js                 # Site footer component
+│   │   │   ├── Hero.js                   # Homepage hero section
+│   │   │   ├── LoginModal.js             # Login/signup modal
+│   │   │   ├── Navbar.js                 # Navigation bar with cart
+│   │   │   ├── PopularDishes.js          # Popular dishes section
+│   │   │   └── RestaurantCard.js         # Restaurant card display
+│   │   │
+│   │   ├── pages/                        # 📄 Full Page Components
+│   │   │   ├── CheckoutPage.js           # Order checkout & payment
+│   │   │   ├── CustomerOrderTrackingPage.js  # Order status tracking
+│   │   │   ├── CustomerProfilePage.js    # User profile & order history
+│   │   │   ├── CustomerSignupPage.js     # Customer registration
+│   │   │   ├── ForgotPasswordPage.js     # Password reset request
+│   │   │   ├── HomePage.js               # Landing page
+│   │   │   ├── HomePageWithChatbot.css   # Homepage styling
+│   │   │   ├── HomePageWithChatbot.example.js  # Example implementation
+│   │   │   ├── PartnerDashboard.js       # Partner order management
+│   │   │   ├── PartnerSettingsPage.js    # Partner profile settings
+│   │   │   ├── ResetPasswordPage.js      # Password reset with token
+│   │   │   ├── RestaurantPage.js         # Restaurant menu display
+│   │   │   ├── RestaurantPartnerPage.js  # Partner registration
+│   │   │   └── ShopManagementPage.js     # Menu & offer management
+│   │   │
+│   │   ├── services/                     # 🔌 API Integration
+│   │   │   └── api.js                    # Axios HTTP client & endpoints
+│   │   │
+│   │   ├── utils/                        # 🛠️ Utility Functions
+│   │   │   └── translations.js           # i18n translation strings
+│   │   │
+│   │   ├── App.js                        # 🎯 Main application component
+│   │   ├── index.js                      # React entry point
+│   │   └── index.css                     # Global styles & Tailwind
+│   │
+│   ├── package.json                      # Frontend dependencies
+│   ├── package-lock.json                 # Dependency lock file
+│   ├── postcss.config.js                 # PostCSS configuration
+│   ├── tailwind.config.js                # Tailwind CSS configuration
+│   ├── README.md                         # Frontend documentation
+│   └── REFACTORING_SUMMARY.md            # Code refactoring notes
+│
+├── Backend/                              # Express.js API Server
+│   ├── src/
+│   │   ├── config/                       # ⚙️ Configuration Files
+│   │   │   ├── db.js                     # MongoDB connection setup
+│   │   │   └── env.js                    # Environment variables loader
+│   │   │
+│   │   ├── controllers/                  # 🎮 Business Logic Layer
+│   │   │   ├── analyticsController.js    # Popular dishes & metrics
+│   │   │   ├── authController.js         # Authentication & authorization
+│   │   │   ├── chatbotController.js      # AI combo generation
+│   │   │   ├── orderController.js        # Order CRUD operations
+│   │   │   ├── partnerController.js      # Partner management
+│   │   │   └── restaurantController.js   # Restaurant & menu operations
+│   │   │
+│   │   ├── middleware/                   # 🛡️ Express Middleware
+│   │   │   ├── auth.js                   # JWT token verification
+│   │   │   └── error.js                  # Global error handler
+│   │   │
+│   │   ├── models/                       # 📊 Database Schemas (Mongoose)
+│   │   │   ├── MenuItem.js               # Menu item schema
+│   │   │   ├── Order.js                  # Order schema
+│   │   │   ├── Partner.js                # Restaurant partner schema
+│   │   │   ├── Restaurant.js             # Restaurant schema
+│   │   │   ├── Review.js                 # Customer review schema
+│   │   │   └── User.js                   # Customer user schema
+│   │   │
+│   │   ├── routes/                       # 🛣️ API Endpoint Definitions
+│   │   │   ├── analytics.js              # GET /api/analytics/*
+│   │   │   ├── auth.js                   # POST /api/auth/*
+│   │   │   ├── chatbot.js                # POST /api/chatbot/*
+│   │   │   ├── orders.js                 # CRUD /api/orders/*
+│   │   │   ├── partners.js               # CRUD /api/partners/*
+│   │   │   └── restaurants.js            # CRUD /api/restaurants/*
+│   │   │
+│   │   ├── scripts/                      # 🔧 Utility Scripts
+│   │   │   ├── check-chatbot-fields.js   # Verify chatbot data
+│   │   │   ├── check-menuitems.js        # Verify menu items
+│   │   │   ├── check-offer.js            # Check active offers
+│   │   │   ├── diagnose.js               # Database diagnostics
+│   │   │   ├── seed.js                   # Seed sample data
+│   │   │   ├── seed-chatbot-fields.js    # Seed chatbot data
+│   │   │   ├── test-add-item.js          # Test item creation
+│   │   │   ├── test-chatbot-helpers.js   # Test chatbot functions
+│   │   │   └── verify-images.js          # Verify image uploads
+│   │   │
+│   │   ├── uploads/                      # 📁 Uploaded Files Storage
+│   │   │   └── *.jpg, *.png, *.webp      # Restaurant & menu images
+│   │   │
+│   │   ├── utils/                        # 🛠️ Helper Functions
+│   │   │   ├── chatbotHelper.js          # AI combo generation logic
+│   │   │   ├── email.js                  # Email sending (nodemailer)
+│   │   │   ├── hash.js                   # Password hashing (bcrypt)
+│   │   │   └── tokens.js                 # JWT token management
+│   │   │
+│   │   ├── __tests__/                    # 🧪 Test Files (Jest)
+│   │   │   └── api.test.js               # Sample API tests
+│   │   │
+│   │   └── server.js                     # 🚀 Express app entry point
+│   │
+│   ├── package.json                      # Backend dependencies
+│   ├── package-lock.json                 # Dependency lock file
+│   ├── nodemon.json                      # Nodemon configuration
+│   ├── test-chatbot-direct.js            # Direct chatbot test
+│   ├── .env                              # Environment variables (NOT in Git)
+│   └── .env.example                      # Environment template
+│
+├── API_DOCUMENTATION.md                  # 📖 Complete API reference
+├── SUSTAINABILITY_PLAN.md                # 📈 Scalability & maintenance plan
+├── README.md                             # 📘 Project overview & setup
+├── fix_authors.py                        # Git author fix script
+├── test-upload.html                      # File upload test page
+└── .gitignore                            # Git ignore rules
 ```
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18+ and npm
-- MongoDB Atlas account (free tier available)
-- Git
-
-### Installation
-
-#### 1. Clone the repository
-
-```bash
-git clone https://github.com/joyonta23/HappyMeals.git
-cd HappyMeals
-```
-
-#### 2. Backend Setup
-
-```bash
-cd Backend
-
-# Install dependencies
-npm install
-
-# Create .env file (copy from .env.example)
-cp .env.example .env
-
-# Update .env with your MongoDB Atlas URI
-# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/happymeal
-# JWT_SECRET=your_secret_key
-# CORS_ORIGIN=http://localhost:3000
-# PORT=5000
-
-# Start the backend server
-npm run dev
-```
-
-Backend runs on `http://localhost:5000`
-
-#### 3. Frontend Setup
-
-```bash
-cd Frontend
-
-# Install dependencies
-npm install
-
-# Create .env.local file
-echo "REACT_APP_API_URL=http://localhost:5000/api" > .env.local
-
-# Start the development server
-npm start
-```
-
-Frontend runs on `http://localhost:3000`
-
-## 🔑 Demo Credentials
-
-### Customer Login
-
-- **Email:** joyontobiswas2020@gmail.com
-- **Password:** (Set during signup)
-
-### Restaurant Partner Login
-
-- **Partner ID:** PARTNER001 or PARTNER002
-- **Password:** demo123
-
-## 📡 API Endpoints
-
-### Authentication
-
-- `POST /api/auth/customer-signup` - Register new customer
-- `POST /api/auth/customer-login` - Login customer
-- `PUT /api/auth/customer-profile` - Update customer profile
-- `POST /api/auth/partner-login` - Login restaurant partner
-
-### Restaurants
-
-- `GET /api/restaurants` - Get all restaurants
-- `GET /api/restaurants/:id` - Get restaurant details
-
-### Orders
-
-- `POST /api/orders` - Create new order (requires auth)
-- `GET /api/orders/:id` - Get order details
-
-### Analytics
-
-- `GET /api/analytics/:partnerId` - Get partner analytics (requires auth)
-
-### Partners
-
-- `POST /api/partners/register` - Register new restaurant partner
-
-## 🌍 Internationalization
-
-The app supports two languages:
-
-- **English (EN)** - Default language
-- **বাংলা (Bengali)** - Translated UI
-
-Switch languages using the language selector in the navbar.
-
-Translation strings are centralized in:
-
-```
-Frontend/src/utils/translations.js
-```
-
-## 🛡️ Security Features
-
-- ✅ **JWT Authentication** - Secure token-based auth
-- ✅ **Password Hashing** - bcryptjs with salt rounds
-- ✅ **CORS Protection** - Configured origin whitelist
-- ✅ **Helmet** - HTTP security headers
-- ✅ **Input Validation** - express-validator on routes
-- ✅ **Protected Routes** - Auth middleware on sensitive endpoints
-- ✅ **Environment Variables** - Sensitive data in .env (not committed)
-
-## 📊 Database Schema
-
-### Users Collection
-
-```javascript
-{
-  name: String,
-  email: String (unique),
-  phone: String (unique),
-  passwordHash: String,
-  role: String (enum: customer, partner, admin),
-  addresses: [{
-    line1: String,
-    line2: String,
-    city: String,
-    country: String
-  }],
-  createdAt: Date,
-  updatedAt: Date
-}
-```
-
-### Orders Collection
-
-```javascript
-{
-  customerId: ObjectId,
-  restaurantId: ObjectId,
-  items: [{
-    itemId: ObjectId,
-    name: String,
-    price: Number,
-    quantity: Number
-  }],
-  totalAmount: Number,
-  deliveryAddress: Object,
-  status: String (enum: pending, confirmed, preparing, delivering, delivered),
-  createdAt: Date
-}
-```
-
-## 🔄 Development Workflow
-
-### Making Changes
-
-1. Create a new branch for features: `git checkout -b feature/your-feature`
-2. Make your changes
-3. Test thoroughly
-4. Commit with clear messages: `git commit -m "Add feature: description"`
-5. Push to GitHub: `git push origin feature/your-feature`
-6. Open a Pull Request
-
-### Running Tests
-
-```bash
-# Frontend
-cd Frontend
-npm test
-
-# Backend
-cd Backend
-npm test
-```
-
-## 📝 Environment Variables
-
-### Backend (.env)
-
-```
-MONGODB_URI=mongodb+srv://user:password@cluster.mongodb.net/happymeal
-JWT_SECRET=your_super_secret_key_change_this
-CORS_ORIGIN=http://localhost:3000
-PORT=5000
-```
-
-### Frontend (.env.local)
-
-```
-REACT_APP_API_URL=http://localhost:5000/api
-```
-
-## 🐛 Troubleshooting
-
-### Backend won't start
-
-- Check MongoDB Atlas connection string
-- Verify port 5000 is available
-- Ensure .env file exists with correct variables
-
-### Frontend won't connect to backend
-
-- Verify backend is running on port 5000
-- Check CORS_ORIGIN in backend .env
-- Clear browser cache and restart dev server
-
-### Database connection errors
-
-- Verify MongoDB Atlas IP whitelist includes your IP
-- Check username/password in connection string
-- Ensure database user has proper permissions
-
-## 🚀 Deployment
-
-### Frontend (Vercel/Netlify)
-
-```bash
-# Build for production
-cd Frontend
-npm run build
-
-# Deploy the build folder
-```
-
-### Backend (Heroku/Railway/Render)
-
-```bash
-# Set environment variables in hosting platform
-# Push to Git and deploy
-```
-
-## 📚 Additional Resources
-
-- [React Documentation](https://react.dev)
-- [Express.js Guide](https://expressjs.com)
-- [MongoDB Documentation](https://docs.mongodb.com)
-- [Tailwind CSS Docs](https://tailwindcss.com/docs)
-- [JWT Introduction](https://jwt.io/introduction)
-
-## 🤝 Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to your fork
-5. Open a Pull Request
-
-## 📄 License
-
-This project is open source and available under the MIT License.
-
-## 👨‍💻 Author
-
-**Joyonta Biswas**
-
-- GitHub: [@joyonta23](https://github.com/joyonta23)
-- Email: joyontobiswas2020@gmail.com
-
-## 🙏 Acknowledgments
-
-- Inspired by Foodpanda's user experience
-- Built with modern web technologies
-- Thanks to the open-source community
 
 ---
 
-**Happy coding! 🎉**
+## 🏗️ Architecture Overview
 
-For questions or support, please open an issue on GitHub.
+### **Frontend Architecture (React SPA)**
+
+```
+MVC Pattern:
+
+User Interface Layer
+    ↓
+Component Layer (Reusable UI)
+    ↓
+Page Layer (Full Pages)
+    ↓
+Service Layer (API Client)
+    ↓
+Backend API
+```
+
+**Key Features:**
+
+- **State Management**: React Hooks (useState, useEffect)
+- **Styling**: Tailwind CSS + Custom CSS
+- **Routing**: Client-side with conditional rendering
+- **HTTP Client**: Axios
+- **UI Icons**: Lucide React
+
+---
+
+### **Backend Architecture (Express + MongoDB)**
+
+```
+HTTP Request
+    ↓
+Express Router (routes/)
+    ↓
+Middleware (auth, validation)
+    ↓
+Controller (business logic)
+    ↓
+Model (Mongoose schema)
+    ↓
+MongoDB Database
+```
+
+**Key Features:**
+
+- **Authentication**: JWT (JSON Web Tokens)
+- **Database**: MongoDB with Mongoose ODM
+- **File Upload**: Multer middleware
+- **Security**: Helmet, CORS, bcrypt
+- **Email**: Nodemailer for notifications
+
+---
+
+## 🔄 Data Flow Examples
+
+### **1. User Signup Flow**
+
+```
+Frontend (CustomerSignupPage.js)
+    → POST /api/auth/customer-signup
+        → authController.customerSignup()
+            → User.create() [MongoDB]
+            → Generate JWT token
+        ← Return token + user data
+    ← Store token in localStorage
+```
+
+### **2. Order Placement Flow**
+
+```
+Frontend (CheckoutPage.js)
+    → POST /api/orders [with JWT token]
+        → auth middleware (verify token)
+        → orderController.createOrder()
+            → Order.create() [MongoDB]
+        ← Return orderId
+    ← Show success message
+```
+
+### **3. AI Combo Generation Flow**
+
+```
+Frontend (ChatbotAssistant.js)
+    → POST /api/chatbot/generate-combo
+        → chatbotController.generateCombo()
+            → chatbotHelper.generateCombos()
+                → Query MenuItem collection
+                → Apply AI matching logic
+            ← Return combo suggestions
+    ← Display combo cards
+```
+
+---
+
+## 🗂️ File Naming Conventions
+
+### **Frontend**
+
+- **Components**: PascalCase (e.g., `RestaurantCard.js`)
+- **Pages**: PascalCase with "Page" suffix (e.g., `CheckoutPage.js`)
+- **Utilities**: camelCase (e.g., `translations.js`)
+- **Styles**: camelCase with `.css` (e.g., `ChatbotAssistant.css`)
+
+### **Backend**
+
+- **Controllers**: camelCase + "Controller" (e.g., `authController.js`)
+- **Models**: PascalCase (e.g., `User.js`, `MenuItem.js`)
+- **Routes**: camelCase (e.g., `auth.js`, `restaurants.js`)
+- **Utilities**: camelCase (e.g., `hash.js`, `tokens.js`)
+
+---
+
+## 📦 Key Dependencies
+
+### **Frontend**
+
+| Package                  | Purpose             |
+| ------------------------ | ------------------- |
+| `react`                  | UI library          |
+| `react-router-dom`       | Client-side routing |
+| `axios`                  | HTTP requests       |
+| `tailwindcss`            | CSS framework       |
+| `lucide-react`           | Icon library        |
+| `@testing-library/react` | Component testing   |
+
+### **Backend**
+
+| Package        | Purpose               |
+| -------------- | --------------------- |
+| `express`      | Web framework         |
+| `mongoose`     | MongoDB ODM           |
+| `jsonwebtoken` | JWT authentication    |
+| `bcryptjs`     | Password hashing      |
+| `multer`       | File uploads          |
+| `nodemailer`   | Email sending         |
+| `helmet`       | Security headers      |
+| `cors`         | Cross-origin requests |
+| `morgan`       | HTTP logging          |
+| `jest`         | Testing framework     |
+| `supertest`    | API testing           |
+
+---
+
+## 🔐 Environment Variables
+
+**Backend (.env)**
+
+```env
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/happymeal
+JWT_SECRET=your-secret-key-here
+JWT_EXPIRES_IN=7d
+CORS_ORIGIN=http://localhost:3000
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+```
+
+**Frontend (Environment)**
+
+```env
+REACT_APP_API_URL=http://localhost:5000/api
+```
+
+---
+
+## 🚀 Running the Project
+
+### **Development Mode**
+
+**Backend:**
+
+```bash
+cd Backend
+npm install
+npm run dev          # Runs on http://localhost:5000
+```
+
+**Frontend:**
+
+```bash
+cd Frontend
+npm install
+npm start            # Runs on http://localhost:3000
+```
+
+### **Production Build**
+
+**Frontend:**
+
+```bash
+cd Frontend
+npm run build        # Creates optimized build in build/
+```
+
+**Backend:**
+
+```bash
+cd Backend
+npm start            # Runs production server
+```
+
+---
+
+## 🧪 Testing
+
+### **Run Tests**
+
+```bash
+# Backend
+cd Backend
+npm test
+
+# Frontend
+cd Frontend
+npm test
+```
+
+### **GitHub Actions CI/CD**
+
+Automated testing runs on every push via `.github/workflows/test.yml`
+
+---
+
+## 📝 API Endpoints Summary
+
+| Method | Endpoint                      | Description            |
+| ------ | ----------------------------- | ---------------------- |
+| GET    | `/health`                     | Health check           |
+| POST   | `/api/auth/customer-signup`   | Customer registration  |
+| POST   | `/api/auth/customer-login`    | Customer login         |
+| POST   | `/api/auth/partner-login`     | Partner login          |
+| GET    | `/api/restaurants`            | List all restaurants   |
+| GET    | `/api/restaurants/:id`        | Get restaurant details |
+| POST   | `/api/orders`                 | Create new order       |
+| GET    | `/api/orders`                 | Get user's orders      |
+| PUT    | `/api/orders/:id/status`      | Update order status    |
+| POST   | `/api/partners/register`      | Register new partner   |
+| POST   | `/api/partners/items`         | Add menu item          |
+| PUT    | `/api/partners/items/:id`     | Update menu item       |
+| POST   | `/api/chatbot/generate-combo` | Generate meal combos   |
+| GET    | `/api/analytics/popular`      | Get popular dishes     |
+
+---
+
+## 🎯 Key Features by Component
+
+### **Frontend Components**
+
+**Navbar.js**
+
+- User authentication status
+- Cart display with item count
+- Language toggle (EN/BN)
+- Navigation to pages
+
+**ChatbotAssistant.js**
+
+- AI-powered combo suggestions
+- Multi-step conversation flow
+- Budget & preference input
+- Combo cards with "Add to Cart"
+
+**RestaurantCard.js**
+
+- Restaurant image & details
+- Rating display
+- Delivery fee
+- Click to view menu
+
+**CheckoutPage.js**
+
+- Cart item management
+- Delivery/Pickup selection
+- Payment method selection
+- Order placement
+
+### **Backend Controllers**
+
+**authController.js**
+
+- User/Partner signup & login
+- JWT token generation
+- Password reset via email
+- Profile updates
+
+**orderController.js**
+
+- Create orders with items
+- Fetch user order history
+- Update order status
+- Apply discounts & offers
+
+**chatbotController.js**
+
+- AI combo generation based on budget
+- Filter by dietary preferences
+- Restaurant-specific combos
+
+**partnerController.js**
+
+- Menu item CRUD operations
+- Offer management
+- Restaurant image upload
+- Order management
+
+---
+
+## 🔧 Configuration Files
+
+**Frontend:**
+
+- `tailwind.config.js` - Tailwind CSS customization
+- `postcss.config.js` - PostCSS plugins
+- `package.json` - Dependencies & scripts
+
+**Backend:**
+
+- `nodemon.json` - Nodemon watch configuration
+- `package.json` - Dependencies & scripts
+- `.env` - Environment variables
+
+**GitHub Actions:**
+
+- `.github/workflows/test.yml` - CI/CD pipeline
+
+## 🎨 Design Patterns Used
+
+### **Frontend**
+
+- **Component Composition**: Reusable UI components
+- **Container/Presentational**: Pages vs Components
+- **Hooks Pattern**: State management with React Hooks
+- **Service Layer**: Centralized API calls
+
+### **Backend**
+
+- **MVC Pattern**: Model-View-Controller separation
+- **Middleware Pattern**: Request/response pipeline
+- **Repository Pattern**: Mongoose models
+- **Dependency Injection**: Config through env.js
+
+---
+
+## 🔒 Security Features
+
+✅ JWT authentication with expiration  
+✅ Password hashing with bcrypt  
+✅ CORS configuration  
+✅ Helmet security headers  
+✅ Input validation with express-validator  
+✅ File upload restrictions (size, type)  
+✅ Environment variable protection  
+✅ Rate limiting ready
+
+---
+
+## 🚀 Future Enhancements
+
+### **Suggested Structure Additions**
+
+```
+Frontend/src/
+├── hooks/                    # Custom React hooks
+│   ├── useAuth.js
+│   └── useCart.js
+├── context/                  # React Context API
+│   └── AuthContext.js
+└── constants/               # App constants
+    └── routes.js
+
+Backend/src/
+├── validators/              # Request validators
+│   ├── authValidator.js
+│   └── orderValidator.js
+├── services/                # Business logic services
+│   ├── emailService.js
+│   └── paymentService.js
+└── helpers/                 # Helper functions
+    └── dateHelper.js
+```
+
+---
