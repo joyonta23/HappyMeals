@@ -37,7 +37,7 @@ export const CheckoutPage = ({
   const getTotalPrice = () => {
     const subtotal = cart.reduce(
       (sum, item) => sum + item.price * item.quantity,
-      0
+      0,
     );
     const deliveryFee =
       cart.length > 0 && serviceType === "delivery"
@@ -52,6 +52,12 @@ export const CheckoutPage = ({
 
   const handleProceedToPayment = () => {
     // Validation
+    if (!selectedRestaurant) {
+      alert(
+        "Restaurant information is missing. Please go back and select items from a restaurant.",
+      );
+      return;
+    }
     if (serviceType === "delivery" && !deliveryAddress.trim()) {
       alert("Please enter your delivery address");
       return;
@@ -96,14 +102,14 @@ export const CheckoutPage = ({
         const order = {
           id: orderId,
           items: cart,
-          restaurant: selectedRestaurant.name,
+          restaurant: selectedRestaurant?.name || "Unknown Restaurant",
           restaurantId,
           serviceType,
           paymentMethod,
           deliveryAddress:
             serviceType === "delivery"
               ? deliveryAddress
-              : selectedRestaurant?.name,
+              : selectedRestaurant?.name || "Pickup",
           deliveryInstructions,
           subtotal,
           deliveryFee,
@@ -120,7 +126,7 @@ export const CheckoutPage = ({
         localStorage.setItem("orders", JSON.stringify(orders));
 
         const restaurantOrders = JSON.parse(
-          localStorage.getItem("partner-orders") || "[]"
+          localStorage.getItem("partner-orders") || "[]",
         );
         restaurantOrders.push({
           ...order,
@@ -129,12 +135,12 @@ export const CheckoutPage = ({
         });
         localStorage.setItem(
           "partner-orders",
-          JSON.stringify(restaurantOrders)
+          JSON.stringify(restaurantOrders),
         );
 
         // Notifications
         const partnerNotifs = JSON.parse(
-          localStorage.getItem("partner-notifications") || "[]"
+          localStorage.getItem("partner-notifications") || "[]",
         );
         partnerNotifs.unshift({
           id: `pnotif-${Date.now()}`,
@@ -146,11 +152,11 @@ export const CheckoutPage = ({
         });
         localStorage.setItem(
           "partner-notifications",
-          JSON.stringify(partnerNotifs.slice(0, 50))
+          JSON.stringify(partnerNotifs.slice(0, 50)),
         );
 
         const userNotifs = JSON.parse(
-          localStorage.getItem("user-notifications") || "[]"
+          localStorage.getItem("user-notifications") || "[]",
         );
         userNotifs.unshift({
           id: `unotif-${Date.now()}`,
@@ -162,14 +168,14 @@ export const CheckoutPage = ({
         });
         localStorage.setItem(
           "user-notifications",
-          JSON.stringify(userNotifs.slice(0, 50))
+          JSON.stringify(userNotifs.slice(0, 50)),
         );
 
         setIsProcessing(false);
         setShowSuccess(true);
         setTimeout(() => {
           alert(
-            `✅ Order placed successfully!\n\nOrder ID: ${orderId}\nPayment Method: ${paymentMethod.toUpperCase()}\nTotal: ৳${total}\n\n✅ Restaurant has been notified!`
+            `✅ Order placed successfully!\n\nOrder ID: ${orderId}\nPayment Method: ${paymentMethod.toUpperCase()}\nTotal: ৳${total}\n\n✅ Restaurant has been notified!`,
           );
           if (onClearCart) {
             onClearCart();
@@ -277,7 +283,9 @@ export const CheckoutPage = ({
                     </p>
                   </div>
                   <span className="ml-auto font-semibold text-orange-600">
-                    {hasActiveFreeDelivery ? "Free (offer)" : `+৳${deliveryFee}`}
+                    {hasActiveFreeDelivery
+                      ? "Free (offer)"
+                      : `+৳${deliveryFee}`}
                   </span>
                 </label>
                 <label
@@ -429,8 +437,8 @@ export const CheckoutPage = ({
                   isProcessing
                     ? "bg-gray-400 cursor-not-allowed text-white"
                     : cart.length === 0
-                    ? "bg-gray-300 cursor-not-allowed text-gray-600"
-                    : "bg-orange-600 text-white hover:bg-orange-700"
+                      ? "bg-gray-300 cursor-not-allowed text-gray-600"
+                      : "bg-orange-600 text-white hover:bg-orange-700"
                 }`}
               >
                 <CreditCard size={20} />

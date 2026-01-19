@@ -294,6 +294,7 @@ const mockRestaurants = [
 ];
 
 // Mock Partner Accounts (Restaurant Owners)
+// eslint-disable-next-line no-unused-vars
 const partnerAccounts = {
   PARTNER001: {
     id: "PARTNER001",
@@ -378,14 +379,13 @@ const getAnalyticsData = (partnerId) => ({
 const App = () => {
   // Check URL for reset password route on initial load
   const getInitialPage = () => {
-    const path = window.location.pathname;
     const search = window.location.search;
-    
+
     // Check if URL contains reset-password token
-    if (search.includes('token=') && search.includes('type=')) {
+    if (search.includes("token=") && search.includes("type=")) {
       return "reset-password";
     }
-    
+
     return "home";
   };
 
@@ -393,7 +393,7 @@ const App = () => {
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [highlightedItemId, setHighlightedItemId] = useState(null);
   const [cart, setCart] = useState([]);
-  const [location, setLocation] = useState("Chattogram");
+  const [location] = useState("Chattogram");
   const [loggedInPartner, setLoggedInPartner] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [restaurants, setRestaurants] = useState(mockRestaurants);
@@ -402,14 +402,14 @@ const App = () => {
   const mergeWithMockItems = (apiRestaurant) => {
     const name = (apiRestaurant.name || "").toLowerCase();
     let fallback = mockRestaurants.find(
-      (m) => (m.name || "").toLowerCase() === name
+      (m) => (m.name || "").toLowerCase() === name,
     );
 
     // If exact name match not found, try matching by cuisine
     if (!fallback && apiRestaurant.cuisine) {
       const cuisine = (apiRestaurant.cuisine || "").toLowerCase();
       fallback = mockRestaurants.find((m) =>
-        (m.cuisine || "").toLowerCase().includes(cuisine)
+        (m.cuisine || "").toLowerCase().includes(cuisine),
       );
     }
 
@@ -445,6 +445,7 @@ const App = () => {
 
   React.useEffect(() => {
     loadRestaurants();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Ensure Home list reflects latest offers/items after partner changes
@@ -452,6 +453,7 @@ const App = () => {
     if (currentPage === "home") {
       loadRestaurants();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
 
   const handleRestaurantSelection = async (restaurant) => {
@@ -489,8 +491,8 @@ const App = () => {
     if (existingItem) {
       setCart(
         cart.map((c) =>
-          c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c
-        )
+          c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c,
+        ),
       );
     } else {
       setCart([...cart, { ...item, quantity: 1, restaurantId }]);
@@ -504,8 +506,8 @@ const App = () => {
     } else {
       setCart(
         cart.map((c) =>
-          c.id === itemId ? { ...c, quantity: c.quantity - 1 } : c
-        )
+          c.id === itemId ? { ...c, quantity: c.quantity - 1 } : c,
+        ),
       );
     }
   };
@@ -514,10 +516,11 @@ const App = () => {
     setCart([]);
   };
 
+  // eslint-disable-next-line no-unused-vars
   const getTotalPrice = () => {
     const subtotal = cart.reduce(
       (sum, item) => sum + item.price * item.quantity,
-      0
+      0,
     );
     const now = new Date();
     const hasActiveFreeDelivery = cart.some((item) => {
@@ -569,7 +572,11 @@ const App = () => {
           }}
           onNavigateToForgotPassword={(userType) => {
             setShowLoginModal(false);
-            setCurrentPage(userType === "partner" ? "forgot-password-partner" : "forgot-password-customer");
+            setCurrentPage(
+              userType === "partner"
+                ? "forgot-password-partner"
+                : "forgot-password-customer",
+            );
           }}
           language={language}
         />
