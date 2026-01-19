@@ -158,7 +158,6 @@ const ChatbotAssistant = ({
   const handleRestart = () => {
     setStep(1);
     setPriceRange("");
-    setPreferences("");
     setCombos([]);
     setInputValue("");
     const greeting =
