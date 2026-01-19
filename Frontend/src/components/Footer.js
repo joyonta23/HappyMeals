@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  MapPin,
-  Mail,
-  Phone,
-  Facebook,
-  Instagram,
-  Twitter,
-  Linkedin,
-} from "lucide-react";
+import { Mail, Phone, Facebook, Instagram, Linkedin } from "lucide-react";
 
 export const Footer = () => (
   <footer className="bg-gray-900 text-white py-12 mt-12">
