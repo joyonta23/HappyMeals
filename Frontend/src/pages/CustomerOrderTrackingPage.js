@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   MapPin,
-  Phone,
   Clock,
   Truck,
   Store,
@@ -16,7 +15,9 @@ export const CustomerOrderTrackingPage = ({ setCurrentPage }) => {
 
   useEffect(() => {
     const userOrders = JSON.parse(localStorage.getItem("orders") || "[]");
-    setOrders(userOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+    setOrders(
+      userOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+    );
   }, []);
 
   const getStatusColor = (status) => {
@@ -77,7 +78,13 @@ export const CustomerOrderTrackingPage = ({ setCurrentPage }) => {
   };
 
   const getProgressPercentage = (status) => {
-    const statuses = ["pending", "accepted", "preparing", "on-the-way", "delivered"];
+    const statuses = [
+      "pending",
+      "accepted",
+      "preparing",
+      "on-the-way",
+      "delivered",
+    ];
     const index = statuses.indexOf(status);
     return index === -1 ? 0 : ((index + 1) / statuses.length) * 100;
   };
@@ -140,9 +147,12 @@ export const CustomerOrderTrackingPage = ({ setCurrentPage }) => {
           </button>
           <div className="bg-white rounded-lg shadow-md p-12 text-center">
             <div className="text-6xl mb-4">📦</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">No Orders Yet</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              No Orders Yet
+            </h2>
             <p className="text-gray-600 mb-6">
-              You haven't placed any orders yet. Start ordering delicious food now!
+              You haven't placed any orders yet. Start ordering delicious food
+              now!
             </p>
             <button
               onClick={() => setCurrentPage("home")}
@@ -172,13 +182,16 @@ export const CustomerOrderTrackingPage = ({ setCurrentPage }) => {
 
         <div className="space-y-4">
           {orders.map((order) => (
-            <div key={order.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div
+              key={order.id}
+              className="bg-white rounded-lg shadow-md overflow-hidden"
+            >
               {/* Order Header */}
               <div
                 className="p-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white cursor-pointer hover:from-orange-600 hover:to-orange-700 transition"
                 onClick={() =>
                   setExpandedOrderId(
-                    expandedOrderId === order.id ? null : order.id
+                    expandedOrderId === order.id ? null : order.id,
                   )
                 }
               >
@@ -188,7 +201,7 @@ export const CustomerOrderTrackingPage = ({ setCurrentPage }) => {
                       <h3 className="text-xl font-bold">{order.id}</h3>
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-semibold border flex items-center gap-1 ${getStatusColor(
-                          order.status
+                          order.status,
                         )}`}
                       >
                         {getStatusIcon(order.status)}
@@ -197,7 +210,9 @@ export const CustomerOrderTrackingPage = ({ setCurrentPage }) => {
                     </div>
                     <div className="flex items-center gap-4 text-sm opacity-90">
                       <span>📍 {order.restaurant}</span>
-                      <span>🕐 {new Date(order.createdAt).toLocaleString()}</span>
+                      <span>
+                        🕐 {new Date(order.createdAt).toLocaleString()}
+                      </span>
                     </div>
                   </div>
                   <ChevronDown
@@ -214,7 +229,9 @@ export const CustomerOrderTrackingPage = ({ setCurrentPage }) => {
                 <div className="p-6 border-t">
                   {/* Status Timeline */}
                   <div className="mb-8">
-                    <h4 className="font-semibold text-gray-800 mb-4">Delivery Progress</h4>
+                    <h4 className="font-semibold text-gray-800 mb-4">
+                      Delivery Progress
+                    </h4>
                     {renderStatusTimeline(order.status)}
                   </div>
 
@@ -226,7 +243,10 @@ export const CustomerOrderTrackingPage = ({ setCurrentPage }) => {
                       </h5>
                       <div className="space-y-2 text-sm text-gray-700">
                         <div className="flex items-start gap-2">
-                          <MapPin size={16} className="text-orange-600 mt-0.5" />
+                          <MapPin
+                            size={16}
+                            className="text-orange-600 mt-0.5"
+                          />
                           <div>
                             <p className="font-semibold">Address</p>
                             <p>{order.deliveryAddress}</p>
@@ -234,7 +254,10 @@ export const CustomerOrderTrackingPage = ({ setCurrentPage }) => {
                         </div>
                         {order.serviceType === "delivery" && (
                           <div className="flex items-start gap-2">
-                            <Clock size={16} className="text-orange-600 mt-0.5" />
+                            <Clock
+                              size={16}
+                              className="text-orange-600 mt-0.5"
+                            />
                             <div>
                               <p className="font-semibold">Estimated Time</p>
                               <p>~30 minutes from acceptance</p>
@@ -243,24 +266,34 @@ export const CustomerOrderTrackingPage = ({ setCurrentPage }) => {
                         )}
                         {order.deliveryInstructions && (
                           <div>
-                            <p className="font-semibold">Special Instructions</p>
-                            <p className="text-gray-600">{order.deliveryInstructions}</p>
+                            <p className="font-semibold">
+                              Special Instructions
+                            </p>
+                            <p className="text-gray-600">
+                              {order.deliveryInstructions}
+                            </p>
                           </div>
                         )}
                       </div>
                     </div>
 
                     <div>
-                      <h5 className="font-semibold text-gray-800 mb-3">Order Summary</h5>
+                      <h5 className="font-semibold text-gray-800 mb-3">
+                        Order Summary
+                      </h5>
                       <div className="space-y-2 text-sm text-gray-700">
                         <div className="flex justify-between">
                           <span>Subtotal</span>
-                          <span className="font-semibold">৳{order.subtotal}</span>
+                          <span className="font-semibold">
+                            ৳{order.subtotal}
+                          </span>
                         </div>
                         {order.deliveryFee > 0 && (
                           <div className="flex justify-between">
                             <span>Delivery Fee</span>
-                            <span className="font-semibold">৳{order.deliveryFee}</span>
+                            <span className="font-semibold">
+                              ৳{order.deliveryFee}
+                            </span>
                           </div>
                         )}
                         <div className="border-t pt-2 flex justify-between">
@@ -288,7 +321,9 @@ export const CustomerOrderTrackingPage = ({ setCurrentPage }) => {
                           className="flex items-center justify-between p-2 bg-gray-50 rounded"
                         >
                           <div>
-                            <p className="font-semibold text-gray-800">{item.name}</p>
+                            <p className="font-semibold text-gray-800">
+                              {item.name}
+                            </p>
                             <p className="text-sm text-gray-600">
                               ৳{item.price} × {item.quantity}
                             </p>
@@ -304,8 +339,9 @@ export const CustomerOrderTrackingPage = ({ setCurrentPage }) => {
                   {/* Contact Info */}
                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                     <p className="text-sm text-gray-700">
-                      <span className="font-semibold">Need help?</span> Contact the restaurant at
-                      your phone or check your notifications for updates.
+                      <span className="font-semibold">Need help?</span> Contact
+                      the restaurant at your phone or check your notifications
+                      for updates.
                     </p>
                   </div>
                 </div>

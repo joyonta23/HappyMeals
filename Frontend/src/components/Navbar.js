@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import {
-  Search,
   MapPin,
   ShoppingBag,
   User,
@@ -37,8 +36,8 @@ export const Navbar = ({
   const notificationKey = loggedInPartner
     ? "partner-notifications"
     : localStorage.getItem("user")
-    ? "user-notifications"
-    : null;
+      ? "user-notifications"
+      : null;
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);

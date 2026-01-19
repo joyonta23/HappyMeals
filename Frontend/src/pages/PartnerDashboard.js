@@ -49,7 +49,6 @@ export const PartnerDashboard = ({
   useEffect(() => {
     const orders = JSON.parse(localStorage.getItem("partner-orders") || "[]");
     setIncomingOrders(orders);
-    const unread = orders.filter((o) => !o.notificationRead).length;
   }, [activeTab]);
 
   const pushNotification = (message, orderId, type = "info") => {
