@@ -23,7 +23,6 @@ const ChatbotAssistant = ({
     },
   ]);
   const [priceRange, setPriceRange] = useState("");
-  const [preferences, setPreferences] = useState("");
   const [combos, setCombos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -71,7 +70,7 @@ const ChatbotAssistant = ({
 
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL || "http://localhost:5000/api"}/chatbot/generate-combo`,
-        payload
+        payload,
       );
 
       return response.data;
@@ -96,8 +95,8 @@ const ChatbotAssistant = ({
         "bot",
         getText(
           'Great! Now tell me your food preferences. For example: "Vegetarian, mild spice, love biryani" or "Beef, very spicy"',
-          'চমৎকার! এখন আপনার খাবারের পছন্দ বলুন। উদাহরণস্বরূপ: "নিরামিষ, হালকা মসলাযুক্ত, বিরিয়ানি পছন্দ করি" বা "গরুর মাংস, খুব মসলাযুক্ত"'
-        )
+          'চমৎকার! এখন আপনার খাবারের পছন্দ বলুন। উদাহরণস্বরূপ: "নিরামিষ, হালকা মসলাযুক্ত, বিরিয়ানি পছন্দ করি" বা "গরুর মাংস, খুব মসলাযুক্ত"',
+        ),
       );
       setStep(2);
     } else if (step === 2) {
