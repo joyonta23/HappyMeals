@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Star, Clock, ShoppingBag } from "lucide-react";
+import { Star, Clock } from "lucide-react";
 import { apiClient } from "../services/api";
 
 export const RestaurantPage = ({
@@ -78,7 +78,7 @@ export const RestaurantPage = ({
         Number(rating),
         comment,
         token,
-        menuItemId || undefined
+        menuItemId || undefined,
       );
 
       if (response?.review) {
@@ -160,7 +160,7 @@ export const RestaurantPage = ({
               const effectivePrice = offerValid
                 ? Math.round(
                     Number(item.price || 0) *
-                      (1 - Number(item.discountPercent || 0) / 100)
+                      (1 - Number(item.discountPercent || 0) / 100),
                   )
                 : Number(item.price || 0);
               const expiryDisplay = expiresAt
