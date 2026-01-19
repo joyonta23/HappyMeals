@@ -23,8 +23,8 @@ const ChatbotAssistant = ({
     },
   ]);
   const [priceRange, setPriceRange] = useState("");
+  // eslint-disable-next-line no-unused-vars
   const [preferences, setPreferences] = useState("");
-  // preferences is used in generateCombo function
   const [combos, setCombos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState("");
